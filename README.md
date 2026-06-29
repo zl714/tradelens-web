@@ -20,7 +20,15 @@ the part that always works: real data, displayed well.
 - **Ticker search** — look up any symbol.
 - **Quote card** — company name, live price, $ and % change (green up / red down).
 - **Key stats grid** — market cap, P/E, 52-week high/low, volume, day range, open, prev close, EPS.
-- **Interactive price chart** — Chart.js area chart with **1M / 3M / 1Y** range toggles.
+- **Interactive price chart** — Chart.js area chart with **1D / 1W / 1M / 3M / 6M / 1Y**
+  range toggles, plus intraday **1H / 4H** views. Intraday toggles disable
+  gracefully when a live key's tier doesn't include intraday history; in demo
+  mode every toggle works.
+- **Advisor ("Find Stocks")** — a separate view with a short onboarding quiz
+  (horizon, risk, sectors, goal, persisted in `localStorage`) that ranks a
+  bundled universe of ~45 real stocks & ETFs by transparent rule-based match,
+  with a plain-English "Why it matches" for each pick. Educational only — the
+  not-financial-advice notice is scoped to this view.
 - **Latest news** — headlines with source, date, and links that open in a new tab.
 - **Watchlist** — add/remove tickers, persisted in `localStorage`; click to load.
 - **Loading & error states**, plus a **"Demo data"** badge when running on sample data.
@@ -43,7 +51,10 @@ Browser  ──►  /api/data?endpoint=quote&symbol=AAPL  ──►  FMP API
    └───────────────  JSON { source, data }  ◄───────────────┘
 ```
 
-- `endpoint` is one of `quote | profile | history | news`.
+- `endpoint` is one of `quote | profile | history | news | chart1h | chart4h | chart1d`.
+  The `chart*` endpoints proxy FMP's intraday `/historical-chart` series; when a
+  key's tier doesn't include them they return `{"source": "unavailable"}` so the
+  matching toggle disables instead of showing a broken chart.
 - If `FMP_API_KEY` is missing, or FMP fails / is rate-limited, the function
   returns bundled **sample data** tagged `{"source": "demo"}`.
 - If the `/api` call itself can't be reached (e.g. the page is opened as a local
@@ -57,13 +68,15 @@ marketlens/
 ├── index.html            # markup + script/style includes
 ├── css/styles.css        # theme (dark forest green + lime accent)
 ├── js/
-│   ├── sample-data.js    # client-side fallback dataset
-│   ├── format.js         # number / date formatting helpers
-│   ├── api.js            # fetch layer + fallback logic
-│   ├── charts.js         # Chart.js price chart + range slicing
-│   ├── render.js         # quote / stats / news DOM rendering
-│   ├── watchlist.js      # localStorage watchlist
-│   └── app.js            # orchestration + event wiring
+│   ├── sample-data.js      # client-side fallback dataset (daily + intraday)
+│   ├── format.js           # number / date formatting helpers
+│   ├── api.js              # fetch layer + fallback logic
+│   ├── charts.js           # Chart.js price chart + multi-timeframe toggles
+│   ├── render.js           # quote / stats / news DOM rendering
+│   ├── watchlist.js        # localStorage watchlist
+│   ├── advisor-universe.js # bundled ~45-ticker universe + tags
+│   ├── advisor.js          # onboarding quiz, rule-based ranking, results
+│   └── app.js              # orchestration + view switching + event wiring
 ├── api/
 │   ├── data.py           # Vercel Python serverless proxy (stdlib only)
 │   └── sample.py         # bundled server-side sample dataset
@@ -126,4 +139,4 @@ If you skip the env var, the live site still works — it just shows demo data.
 ---
 
 Built by [Zachary LeCroy](../my-portfolio/index.html). Data via Financial
-Modeling Prep. Educational / portfolio project — not investment advice.
+Modeling Prep. Educational / portfolio project.

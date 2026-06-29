@@ -20,9 +20,10 @@
     if (endpoint === "history") {
       data = { symbol: sym, historical: record.history };
     } else {
+      // quote / profile / news / chart1h / chart4h / chart1d
       data = record[endpoint];
     }
-    return { source: "demo", data: data };
+    return { source: "demo", data: data == null ? null : data };
   }
 
   function fetchEndpoint(endpoint, symbol) {
@@ -35,6 +36,13 @@
         return res.json();
       })
       .then(function (json) {
+        // Backend explicitly reports an intraday endpoint is tier-restricted.
+        // Propagate the null so the UI can DISABLE that toggle (do NOT fall
+        // back to client demo here — that would show demo intraday on a live
+        // chart).
+        if (json && json.source === "unavailable") {
+          return { source: "unavailable", data: null };
+        }
         if (!json || json.source === "error" || json.data == null) {
           // Backend reported an error or empty payload -> client demo.
           return clientSample(endpoint, symbol);
@@ -47,21 +55,36 @@
       });
   }
 
-  // Load all four endpoints for a symbol at once.
+  // Load every endpoint for a symbol at once: the 4 core endpoints plus the
+  // 3 intraday chart endpoints (1D / 1H / 4H).
   function fetchSymbol(symbol) {
     return Promise.all([
       fetchEndpoint("quote", symbol),
       fetchEndpoint("profile", symbol),
       fetchEndpoint("history", symbol),
-      fetchEndpoint("news", symbol)
+      fetchEndpoint("news", symbol),
+      fetchEndpoint("chart1d", symbol),
+      fetchEndpoint("chart1h", symbol),
+      fetchEndpoint("chart4h", symbol)
     ]).then(function (results) {
-      var anyDemo = results.some(function (r) { return r.source === "demo"; });
+      // Badge reflects the CORE data only; an unavailable intraday tier should
+      // not flip an otherwise-live dashboard into "Demo data".
+      var core = results.slice(0, 4);
+      var anyDemo = core.some(function (r) { return r.source === "demo"; });
       return {
         source: anyDemo ? "demo" : "live",
         quote: results[0].data,
         profile: results[1].data,
         history: results[2].data,
-        news: results[3].data
+        news: results[3].data,
+        charts: {
+          d1: results[4].data,
+          h1: results[5].data,
+          h4: results[6].data,
+          d1Source: results[4].source,
+          h1Source: results[5].source,
+          h4Source: results[6].source
+        }
       };
     });
   }

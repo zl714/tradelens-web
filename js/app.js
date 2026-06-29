@@ -35,7 +35,7 @@
       window.MLRender.renderQuote(bundle.quote, bundle.profile);
       window.MLRender.renderStats(bundle.quote);
       window.MLRender.renderNews(bundle.news);
-      window.MLChart.setSeries(bundle.history);
+      window.MLChart.setData(bundle);
       setBadge(bundle.source === "demo");
       setStatus("");
     }).catch(function () {
@@ -57,7 +57,7 @@
     var toggle = document.getElementById("rangeToggle");
     toggle.addEventListener("click", function (e) {
       var btn = e.target.closest(".range-btn");
-      if (!btn) return;
+      if (!btn || btn.disabled) return; // ignore disabled (unavailable) toggles
       toggle.querySelectorAll(".range-btn").forEach(function (b) {
         b.classList.remove("is-active");
       });
@@ -66,15 +66,50 @@
     });
   }
 
+  // Simple two-view switcher (Dashboard <-> Advisor) driven by [data-view].
+  function showView(view) {
+    var dash = document.getElementById("view-dashboard");
+    var adv = document.getElementById("view-advisor");
+    var isAdvisor = view === "advisor";
+    if (dash) dash.classList.toggle("view--hidden", isAdvisor);
+    if (adv) adv.classList.toggle("view--hidden", !isAdvisor);
+    document.querySelectorAll("[data-view]").forEach(function (el) {
+      el.classList.toggle("is-active", el.getAttribute("data-view") === view);
+    });
+    if (isAdvisor && window.MLAdvisor) window.MLAdvisor.onShow();
+    window.scrollTo(0, 0);
+  }
+
+  function initViewNav() {
+    document.querySelectorAll("[data-view]").forEach(function (el) {
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        showView(el.getAttribute("data-view"));
+      });
+    });
+  }
+
+  // Load a symbol AND switch back to the dashboard view (used by the advisor
+  // when a recommended ticker is clicked).
+  function loadSymbolInDashboard(symbol) {
+    showView("dashboard");
+    loadSymbol(symbol);
+  }
+
   function init() {
     initSearch();
     initRangeToggle();
+    initViewNav();
     window.MLWatchlist.init(loadSymbol);
+    if (window.MLAdvisor) window.MLAdvisor.init(loadSymbolInDashboard);
 
     // Load the first watchlist symbol (or default) on startup.
     var list = window.MLWatchlist.getList();
     loadSymbol(list[0] || DEFAULT_SYMBOL);
   }
+
+  // Exposed so other modules (advisor) can drive navigation/data loading.
+  window.MLApp = { loadSymbol: loadSymbolInDashboard, showView: showView };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

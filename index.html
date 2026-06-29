@@ -15,12 +15,18 @@
     <a class="nav__brand" href="index.html">
       <span class="nav__logo">▤</span> MarketLens
     </a>
+    <div class="nav__center">
+      <a class="nav__view is-active" href="#" data-view="dashboard">Dashboard</a>
+      <a class="nav__view" href="#" data-view="advisor">Advisor</a>
+    </div>
     <div class="nav__right">
       <span id="dataBadge" class="badge badge--hidden">Demo data</span>
       <a class="nav__link" href="../my-portfolio/index.html">← Portfolio</a>
     </div>
   </nav>
 
+  <!-- ============ DASHBOARD VIEW ============ -->
+  <div id="view-dashboard">
   <header class="hero">
     <h1 class="hero__title">MarketLens</h1>
     <p class="hero__subtitle">
@@ -78,9 +84,15 @@
           <div class="card__header">
             <h3 class="card__title">Price History</h3>
             <div class="range-toggle" id="rangeToggle" role="group" aria-label="Chart range">
+              <button class="range-btn" data-range="1D">1D</button>
+              <button class="range-btn" data-range="1W">1W</button>
               <button class="range-btn" data-range="1M">1M</button>
               <button class="range-btn is-active" data-range="3M">3M</button>
+              <button class="range-btn" data-range="6M">6M</button>
               <button class="range-btn" data-range="1Y">1Y</button>
+              <span class="range-sep" aria-hidden="true"></span>
+              <button class="range-btn" data-range="1H">1H</button>
+              <button class="range-btn" data-range="4H">4H</button>
             </div>
           </div>
           <div class="chart-wrap">
@@ -96,13 +108,43 @@
       </section>
     </div>
   </main>
+  </div><!-- /#view-dashboard -->
+
+  <!-- ============ ADVISOR VIEW ============ -->
+  <div id="view-advisor" class="view--hidden">
+    <main class="container container--advisor">
+      <header class="adv-hero">
+        <h1 class="adv-hero__title">Find Stocks</h1>
+        <p class="adv-hero__subtitle">
+          Answer a few questions and we'll match well-known stocks &amp; ETFs to
+          your profile — with a plain-English reason for every pick.
+        </p>
+      </header>
+
+      <!-- Educational notice — scoped to the Advisor feature ONLY. -->
+      <div class="adv-disclaimer" role="note">
+        <strong>Educational only — not financial advice.</strong>
+        These rule-based matches are for learning and illustration. They are not
+        personalized recommendations. Do your own research and consider a
+        licensed advisor before investing.
+      </div>
+
+      <section id="advisorFormPane" class="card adv-pane">
+        <h2 class="card__title">Your profile</h2>
+        <div id="advisorFormHost"></div>
+      </section>
+
+      <section id="advisorResultsPane" class="adv-pane view--hidden">
+        <div id="advisorResults"></div>
+      </section>
+    </main>
+  </div><!-- /#view-advisor -->
 
   <footer class="footer">
     <p>
       MarketLens by
-      <a href="../my-portfolio/index.html">Zachary LeCroy</a>.
-      Data via Financial Modeling Prep. Educational/portfolio project —
-      not investment advice. Sample data shown when no API key is configured.
+      <a href="../my-portfolio/index.html">Zachary LeCroy</a>
+      · Data via Financial Modeling Prep · Educational portfolio project
     </p>
   </footer>
 
@@ -116,6 +158,8 @@
   <script src="js/charts.js"></script>
   <script src="js/render.js"></script>
   <script src="js/watchlist.js"></script>
+  <script src="js/advisor-universe.js"></script>
+  <script src="js/advisor.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

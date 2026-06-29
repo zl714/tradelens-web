@@ -48,6 +48,42 @@
     return d.toISOString().slice(0, 10);
   }
 
+  // "YYYY-MM-DD HH:MM:SS" for a Date (intraday rows, FMP-style).
+  function dateTimeStr(d) {
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+      " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":00";
+  }
+
+  // Seeded intraday random walk, newest-first like FMP /historical-chart.
+  function buildIntraday(anchor, seed, bars, stepMinutes, vol) {
+    var rand = rng(seed);
+    var closes = [];
+    var price = anchor;
+    for (var i = 0; i < bars; i++) {
+      closes.push(Math.round(price * 100) / 100);
+      var drift = (rand() - 0.5) * 2 * vol;
+      price = price / (1 + drift);
+    }
+    var now = new Date();
+    now.setSeconds(0, 0);
+    var series = [];
+    for (var k = 0; k < closes.length; k++) {
+      var ts = new Date(now.getTime() - stepMinutes * 60000 * k);
+      var close = closes[k];
+      var prev = k + 1 < closes.length ? closes[k + 1] : close;
+      series.push({
+        date: dateTimeStr(ts),
+        open: Math.round(prev * 100) / 100,
+        high: Math.round(Math.max(prev, close) * (1 + rand() * vol) * 100) / 100,
+        low: Math.round(Math.min(prev, close) * (1 - rand() * vol) * 100) / 100,
+        close: close,
+        volume: Math.floor(80000 + rand() * 820000)
+      });
+    }
+    return series;
+  }
+
   function buildHistory(anchor, seed) {
     var rand = rng(seed);
     var days = 365;
@@ -107,7 +143,11 @@
         range: t.yearLow + "-" + t.yearHigh
       }],
       news: buildNews(sym, t),
-      history: buildHistory(t.price, t.seed)
+      history: buildHistory(t.price, t.seed),
+      // Intraday demo series so 1D / 1H / 4H toggles work with no backend.
+      chart1d: buildIntraday(t.price, t.seed + 1, 26, 15, 0.0015),
+      chart1h: buildIntraday(t.price, t.seed + 2, 56, 60, 0.0035),
+      chart4h: buildIntraday(t.price, t.seed + 3, 60, 240, 0.006)
     };
   });
 

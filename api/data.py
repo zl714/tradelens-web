@@ -4,12 +4,20 @@ Proxies the Financial Modeling Prep (FMP) free-tier API using ONLY the Python
 standard library so there is no requirements.txt / dependency risk.
 
 Routing is driven by query params:
-    ?endpoint=quote|profile|history|news&symbol=SYMBOL
+    ?endpoint=quote|profile|history|news|chart1h|chart4h|chart1d&symbol=SYMBOL
 
 Robust fallback: if FMP_API_KEY is missing, or the upstream call fails / is
 rate-limited / returns nothing usable, we serve a bundled realistic SAMPLE
 dataset and tag the response with {"source": "demo"} so the UI can show a
 "Demo data" badge. A recruiter clicking the live link never sees a blank page.
+
+Intraday endpoints (chart1h / chart4h / chart1d) are special: many FMP free
+tiers do NOT include intraday history. When a live key IS configured but the
+intraday call returns empty / unauthorized, we respond with
+{"source": "unavailable", "data": null} so the frontend can gracefully DISABLE
+the matching timeframe toggle rather than silently mixing demo intraday into an
+otherwise-live chart. With NO key at all we still serve demo intraday so every
+toggle works in the demo.
 """
 
 from http.server import BaseHTTPRequestHandler
@@ -22,7 +30,11 @@ import os
 from sample import SAMPLE  # bundled fallback dataset (api/sample.py)
 
 FMP_BASE = "https://financialmodelingprep.com/api/v3"
-VALID_ENDPOINTS = ("quote", "profile", "history", "news")
+# Daily/static endpoints fall back to bundled demo data on any failure.
+CORE_ENDPOINTS = ("quote", "profile", "history", "news")
+# Intraday endpoints disable their toggle (return null) when tier-restricted.
+INTRADAY_ENDPOINTS = ("chart1h", "chart4h", "chart1d")
+VALID_ENDPOINTS = CORE_ENDPOINTS + INTRADAY_ENDPOINTS
 UPSTREAM_TIMEOUT = 8  # seconds
 
 
@@ -34,13 +46,20 @@ def _fmp_url(endpoint, symbol, api_key):
     if endpoint == "profile":
         return f"{FMP_BASE}/profile/{s}?apikey={api_key}"
     if endpoint == "history":
-        # ~1 year of daily candles; the frontend slices to 1M / 3M / 1Y.
+        # ~1 year of daily candles; the frontend slices to 1M..1Y / 1W.
         return (
             f"{FMP_BASE}/historical-price-full/{s}"
             f"?serietype=line&timeseries=365&apikey={api_key}"
         )
     if endpoint == "news":
         return f"{FMP_BASE}/stock_news?tickers={s}&limit=12&apikey={api_key}"
+    if endpoint == "chart1h":
+        return f"{FMP_BASE}/historical-chart/1hour/{s}?apikey={api_key}"
+    if endpoint == "chart4h":
+        return f"{FMP_BASE}/historical-chart/4hour/{s}?apikey={api_key}"
+    if endpoint == "chart1d":
+        # Finer intraday bars for the single-day (1D) view.
+        return f"{FMP_BASE}/historical-chart/15min/{s}?apikey={api_key}"
     return None
 
 
@@ -61,7 +80,7 @@ def _is_usable(endpoint, data):
         return False
     if endpoint == "history":
         return bool(isinstance(data, dict) and data.get("historical"))
-    # quote / profile / news are lists; empty list => unusable.
+    # quote / profile / news / intraday charts are lists; empty => unusable.
     return bool(isinstance(data, list) and len(data) > 0)
 
 
@@ -73,8 +92,22 @@ def _demo_payload(endpoint, symbol):
     if endpoint == "history":
         body["data"] = {"symbol": sym, "historical": record["history"]}
     else:
-        body["data"] = record[endpoint]
+        body["data"] = record.get(endpoint)
     return body
+
+
+def _unavailable_payload(endpoint, symbol):
+    """Signal that an intraday endpoint is not available on this key's tier.
+
+    The frontend uses {"source": "unavailable", "data": null} to gracefully
+    disable the matching timeframe toggle instead of showing a broken chart.
+    """
+    return {
+        "source": "unavailable",
+        "symbol": (symbol or "AAPL").upper(),
+        "endpoint": endpoint,
+        "data": None,
+    }
 
 
 class handler(BaseHTTPRequestHandler):
@@ -112,16 +145,26 @@ class handler(BaseHTTPRequestHandler):
                     "source": "live",
                     "symbol": symbol,
                     "endpoint": endpoint,
+                    "data": data,
                 }
-                payload["data"] = data if endpoint != "history" else data
                 self._send_json(200, payload)
                 return
-            # Upstream returned an error/empty -> fall back to demo.
-            self._send_json(200, _demo_payload(endpoint, symbol))
+            # Upstream returned an error/empty. Intraday endpoints are often
+            # tier-restricted -> tell the UI to disable that toggle. Core
+            # endpoints fall back to demo so the page never goes blank.
+            if endpoint in INTRADAY_ENDPOINTS:
+                self._send_json(200, _unavailable_payload(endpoint, symbol))
+            else:
+                self._send_json(200, _demo_payload(endpoint, symbol))
         except (urllib.error.URLError, urllib.error.HTTPError, ValueError,
                 TimeoutError, OSError):
-            # Network failure / rate limit / bad JSON -> demo fallback.
-            self._send_json(200, _demo_payload(endpoint, symbol))
+            # Network failure / rate limit / bad JSON. For intraday we disable
+            # the toggle (avoid mixing demo intraday into a live chart);
+            # core endpoints fall back to demo.
+            if endpoint in INTRADAY_ENDPOINTS:
+                self._send_json(200, _unavailable_payload(endpoint, symbol))
+            else:
+                self._send_json(200, _demo_payload(endpoint, symbol))
 
     def do_OPTIONS(self):
         self.send_response(204)

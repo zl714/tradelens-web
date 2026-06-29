@@ -10,7 +10,7 @@ chart looks organic across 1M / 3M / 1Y ranges. Standard library only.
 """
 
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 # Anchor figures per ticker (price, name, sector, etc.). Plausible, static.
 _TICKERS = {
@@ -156,6 +156,41 @@ def _build_history(anchor_price, seed):
     return history
 
 
+def _build_intraday(anchor_price, seed, bars, step_minutes, vol):
+    """Seeded random walk -> intraday OHLC-ish bars, newest-first like FMP.
+
+    Each bar mimics FMP's /historical-chart shape:
+    {"date": "YYYY-MM-DD HH:MM:SS", "open", "low", "high", "close", "volume"}.
+    The most recent bar's close matches anchor_price so the intraday view lines
+    up with the live quote. Bars step backwards in time by step_minutes.
+    """
+    rng = random.Random(seed)
+    closes = []
+    price = anchor_price
+    for _ in range(bars):
+        closes.append(round(price, 2))
+        drift = rng.uniform(-vol, vol)
+        price = price / (1 + drift)
+    # closes[0] is the newest (== anchor); keep newest-first ordering.
+    now = datetime.now().replace(second=0, microsecond=0)
+    series = []
+    for i, close in enumerate(closes):
+        ts = now - timedelta(minutes=step_minutes * i)
+        prev = closes[i + 1] if i + 1 < len(closes) else close
+        opn = round(prev, 2)
+        high = round(max(opn, close) * (1 + rng.uniform(0, vol)), 2)
+        low = round(min(opn, close) * (1 - rng.uniform(0, vol)), 2)
+        series.append({
+            "date": ts.strftime("%Y-%m-%d %H:%M:%S"),
+            "open": opn,
+            "low": low,
+            "high": high,
+            "close": close,
+            "volume": rng.randint(80000, 900000),
+        })
+    return series
+
+
 def _build_quote(sym, t):
     return [{
         "symbol": sym,
@@ -219,11 +254,17 @@ def _build_news(sym, t):
 def _build_dataset():
     data = {}
     for sym, t in _TICKERS.items():
+        anchor = t["price"]
+        seed = t["seed"]
         data[sym] = {
             "quote": _build_quote(sym, t),
             "profile": _build_profile(sym, t),
             "news": _build_news(sym, t),
-            "history": _build_history(t["price"], t["seed"]),
+            "history": _build_history(anchor, seed),
+            # Intraday demo series so 1D / 1H / 4H toggles work with no key.
+            "chart1d": _build_intraday(anchor, seed + 1, 26, 15, 0.0015),
+            "chart1h": _build_intraday(anchor, seed + 2, 56, 60, 0.0035),
+            "chart4h": _build_intraday(anchor, seed + 3, 60, 240, 0.006),
         }
     return data
 
