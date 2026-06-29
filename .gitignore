@@ -1,0 +1,25 @@
+# Environment / secrets — NEVER commit
+.env
+.env.local
+.env.*.local
+*.key
+
+# Vercel
+.vercel
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (only if tooling is ever added; app itself needs no npm)
+node_modules/
+npm-debug.log*
