@@ -13,9 +13,64 @@
 (function () {
   "use strict";
 
-  var ACCENT = "#7FFF00";
+  // Semantic price axis (NOT the blue UI accent). Green up / red down.
+  var UP = "#16C784";
+  var DOWN = "#F23645";
+  var BASELINE = "#64748B";       // --text-muted dashed previous-close line
+  var TIP_BG = "#1E293B";         // --surface-3
+  var TIP_BORDER = "rgba(255,255,255,0.10)";
+  var TICK = "#64748B";           // --text-muted
   var chartInstance = null;
   var currentRange = "3M";
+
+  function hexToRgba(hex, a) {
+    var n = parseInt(hex.slice(1), 16);
+    return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," +
+      (n & 255) + "," + a + ")";
+  }
+
+  // Dashed baseline at the first visible value (Robinhood previous-close line).
+  var baselinePlugin = {
+    id: "mlBaseline",
+    afterDatasetsDraw: function (chart) {
+      var meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data || !meta.data.length) return;
+      var ds = chart.data.datasets[0].data;
+      if (!ds.length) return;
+      var yScale = chart.scales.y, area = chart.chartArea;
+      var y = yScale.getPixelForValue(ds[0]);
+      var ctx = chart.ctx;
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = BASELINE;
+      ctx.beginPath();
+      ctx.moveTo(area.left, y);
+      ctx.lineTo(area.right, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  // Thin vertical crosshair at the active (hovered) point.
+  var crosshairPlugin = {
+    id: "mlCrosshair",
+    afterDraw: function (chart) {
+      var active = chart.tooltip && chart.tooltip.getActiveElements
+        ? chart.tooltip.getActiveElements() : [];
+      if (!active.length) return;
+      var x = active[0].element.x, area = chart.chartArea, ctx = chart.ctx;
+      ctx.save();
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.moveTo(x, area.top);
+      ctx.lineTo(x, area.bottom);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
 
   // Normalized ascending series. Each point: { label, close }.
   var series = { daily: [], h1: [], h4: [], d1: [] };
@@ -64,10 +119,10 @@
     return false;
   }
 
-  function buildGradient(ctx, area) {
+  function buildGradient(ctx, area, color) {
     var g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
-    g.addColorStop(0, "rgba(127, 255, 0, 0.35)");
-    g.addColorStop(1, "rgba(127, 255, 0, 0.02)");
+    g.addColorStop(0, hexToRgba(color, 0.14));
+    g.addColorStop(1, hexToRgba(color, 0));
     return g;
   }
 
@@ -102,6 +157,10 @@
 
     if (chartInstance) chartInstance.destroy();
 
+    // Dynamic color: green if the period's net move is up, red if down.
+    var net = values.length ? values[values.length - 1] - values[0] : 0;
+    var color = net >= 0 ? UP : DOWN;
+
     chartInstance = new Chart(canvas.getContext("2d"), {
       type: "line",
       data: {
@@ -109,17 +168,19 @@
         datasets: [{
           label: "Close",
           data: values,
-          borderColor: ACCENT,
+          borderColor: color,
           borderWidth: 2,
           pointRadius: 0,
           pointHoverRadius: 4,
-          pointHoverBackgroundColor: ACCENT,
+          pointHoverBackgroundColor: color,
+          pointHoverBorderColor: "#0F172A",
+          pointHoverBorderWidth: 2,
           tension: 0.25,
           fill: true,
           backgroundColor: function (context) {
             var chart = context.chart;
-            if (!chart.chartArea) return "rgba(127,255,0,0.1)";
-            return buildGradient(chart.ctx, chart.chartArea);
+            if (!chart.chartArea) return hexToRgba(color, 0.1);
+            return buildGradient(chart.ctx, chart.chartArea, color);
           }
         }]
       },
@@ -130,14 +191,20 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: "#162d1a",
-            borderColor: "rgba(127,255,0,0.3)",
+            displayColors: false,
+            backgroundColor: TIP_BG,
+            borderColor: TIP_BORDER,
             borderWidth: 1,
-            titleColor: "#f1f5f9",
-            bodyColor: "#b8e6b8",
+            cornerRadius: 6,
+            padding: 8,
+            titleColor: "#94A3B8",
+            titleFont: { family: "Geist Mono, ui-monospace, monospace", size: 11 },
+            bodyColor: "#F3F4F6",
+            bodyFont: { family: "Geist Mono, ui-monospace, monospace", size: 13, weight: "600" },
             callbacks: {
               title: function (items) {
-                return items && items.length ? String(items[0].label) : "";
+                return items && items.length
+                  ? formatTick(items[0].label, intraday, rangeForTicks) : "";
               },
               label: function (ctx) {
                 return "$" + Number(ctx.parsed.y).toFixed(2);
@@ -148,22 +215,28 @@
         scales: {
           x: {
             grid: { display: false },
+            border: { display: false },
             ticks: {
-              color: "#90c890", maxTicksLimit: 6, maxRotation: 0,
+              color: TICK, maxTicksLimit: 6, maxRotation: 0,
+              font: { family: "Geist Mono, ui-monospace, monospace", size: 11 },
               callback: function (val, idx) {
                 return formatTick(labels[idx], intraday, rangeForTicks);
               }
             }
           },
           y: {
-            grid: { color: "rgba(127,255,0,0.08)" },
+            position: "right",
+            grid: { display: false },
+            border: { display: false },
             ticks: {
-              color: "#90c890",
+              color: TICK, maxTicksLimit: 5,
+              font: { family: "Geist Mono, ui-monospace, monospace", size: 11 },
               callback: function (v) { return "$" + v; }
             }
           }
         }
-      }
+      },
+      plugins: [baselinePlugin, crosshairPlugin]
     });
   }
 

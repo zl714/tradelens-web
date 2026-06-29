@@ -178,7 +178,7 @@
             { value: "income", label: "Income & Dividends", checked: p.goal === "income" }
           ]) + '</div>' +
         '</div>' +
-        '<button type="submit" class="adv-submit">Find matches</button>' +
+        '<button type="submit" class="btn btn--primary adv-submit">Find matches</button>' +
       '</form>';
 
     document.getElementById("advForm").addEventListener("submit", function (e) {
@@ -247,7 +247,7 @@
     host.innerHTML =
       '<div class="adv-results__bar">' +
         '<p class="adv-results__summary">' + summary + '</p>' +
-        '<button type="button" id="advRetake" class="adv-retake">Retake quiz</button>' +
+        '<button type="button" id="advRetake" class="btn btn--secondary btn--sm adv-retake">Retake quiz</button>' +
       '</div>' +
       '<div class="adv-grid">' + recs.map(cardHtml).join("") + '</div>';
 

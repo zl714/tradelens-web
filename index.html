@@ -6,150 +6,176 @@
   <title>MarketLens — Live Stock Data &amp; News</title>
   <meta name="description"
     content="MarketLens: a clean, honest dashboard for real stock quotes, charts, and news. Built by Zachary LeCroy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <!-- Top nav -->
-  <nav class="nav">
-    <a class="nav__brand" href="index.html">
-      <span class="nav__logo">▤</span> MarketLens
-    </a>
-    <div class="nav__center">
-      <a class="nav__view is-active" href="#" data-view="dashboard">Dashboard</a>
-      <a class="nav__view" href="#" data-view="advisor">Advisor</a>
-    </div>
-    <div class="nav__right">
-      <span id="dataBadge" class="badge badge--hidden">Demo data</span>
-      <a class="nav__link" href="../my-portfolio/index.html">← Portfolio</a>
-    </div>
+  <div class="app">
+    <!-- ============ SIDEBAR RAIL ============ -->
+    <aside class="sidebar">
+      <a class="sidebar__brand" href="index.html">
+        <span class="sidebar__logo"><i data-lucide="candlestick-chart"></i></span>
+        MarketLens
+      </a>
+      <div class="nav-group-label">Menu</div>
+      <nav class="sidebar__nav">
+        <a class="navitem is-active" href="#" data-view="dashboard">
+          <i data-lucide="layout-dashboard"></i> Dashboard
+        </a>
+        <a class="navitem" href="#" data-view="advisor">
+          <i data-lucide="compass"></i> Find Stocks
+        </a>
+      </nav>
+      <div class="sidebar__foot">
+        <span id="dataBadge" class="badge badge--hidden">Demo data</span>
+        <a class="nav__link" href="../my-portfolio/index.html">← Back to portfolio</a>
+      </div>
+    </aside>
+
+    <div class="main">
+      <!-- ============ DASHBOARD VIEW ============ -->
+      <div id="view-dashboard">
+        <header class="topbar">
+          <form id="searchForm" class="search" autocomplete="off">
+            <i data-lucide="search" class="search__icon"></i>
+            <input id="searchInput" class="search__input" type="text"
+              placeholder="Search a ticker (e.g. AAPL, TSLA, NVDA, MSFT)"
+              aria-label="Search a stock ticker" />
+          </form>
+          <button class="btn btn--primary" type="submit" form="searchForm">Search</button>
+          <span class="topbar__spacer"></span>
+        </header>
+
+        <main class="container">
+          <div id="status" class="status" role="status" aria-live="polite"></div>
+
+          <div class="layout">
+            <!-- Left column: quote, stats, chart, news -->
+            <section class="content">
+              <!-- Quote header -->
+              <article id="quoteCard" class="card quote">
+                <div class="quote__id">
+                  <span id="quoteSymbol" class="quote__symbol num">—</span>
+                  <span id="quoteCompany" class="quote__company"></span>
+                  <span id="quoteExchange" class="chip"></span>
+                </div>
+                <div class="quote__price-row">
+                  <span id="quotePrice" class="quote__price num">—</span>
+                  <span id="quoteChange" class="quote__change num"></span>
+                </div>
+              </article>
+
+              <!-- Chart -->
+              <article class="card">
+                <div class="card__header">
+                  <h3 class="card__title">Price History</h3>
+                  <div class="range-toggle" id="rangeToggle" role="group" aria-label="Chart range">
+                    <button class="range-btn" data-range="1D">1D</button>
+                    <button class="range-btn" data-range="1W">1W</button>
+                    <button class="range-btn" data-range="1M">1M</button>
+                    <button class="range-btn is-active" data-range="3M">3M</button>
+                    <button class="range-btn" data-range="6M">6M</button>
+                    <button class="range-btn" data-range="1Y">1Y</button>
+                    <span class="range-sep" aria-hidden="true"></span>
+                    <button class="range-btn" data-range="1H">1H</button>
+                    <button class="range-btn" data-range="4H">4H</button>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="priceChart" height="320"></canvas>
+                </div>
+              </article>
+
+              <!-- Key stats -->
+              <article class="card">
+                <h3 class="card__title">Key Stats</h3>
+                <div id="statsGrid" class="stats"></div>
+                <div id="range52Host"></div>
+              </article>
+
+              <!-- News -->
+              <article class="card">
+                <h3 class="card__title">Latest News</h3>
+                <ul id="newsList" class="news"></ul>
+              </article>
+            </section>
+
+            <!-- Right column: watchlist -->
+            <aside class="watchlist card">
+              <div class="card__header">
+                <h3 class="card__title">Watchlist</h3>
+              </div>
+              <form id="watchForm" class="watchlist__add">
+                <input id="watchInput" class="watchlist__input" type="text"
+                  placeholder="Add ticker" aria-label="Add ticker to watchlist" />
+                <button class="btn btn--secondary btn--icon btn--sm" type="submit"
+                  aria-label="Add to watchlist"><i data-lucide="plus"></i></button>
+              </form>
+              <ul id="watchlist" class="watchlist__items"></ul>
+            </aside>
+          </div>
+        </main>
+      </div><!-- /#view-dashboard -->
+
+      <!-- ============ ADVISOR VIEW ============ -->
+      <div id="view-advisor" class="view--hidden">
+        <main class="container container--advisor">
+          <header class="adv-hero">
+            <h1 class="adv-hero__title">Find Stocks</h1>
+            <p class="adv-hero__subtitle">
+              Answer a few questions and we'll match well-known stocks &amp; ETFs to
+              your profile — with a plain-English reason for every pick.
+            </p>
+          </header>
+
+          <!-- Educational notice — scoped to the Advisor feature ONLY. -->
+          <div class="adv-disclaimer" role="note">
+            <strong>Educational only — not financial advice.</strong>
+            These rule-based matches are for learning and illustration. They are not
+            personalized recommendations. Do your own research and consider a
+            licensed advisor before investing.
+          </div>
+
+          <section id="advisorFormPane" class="card adv-pane">
+            <h2 class="card__title">Your profile</h2>
+            <div id="advisorFormHost"></div>
+          </section>
+
+          <section id="advisorResultsPane" class="adv-pane view--hidden">
+            <div id="advisorResults"></div>
+          </section>
+        </main>
+      </div><!-- /#view-advisor -->
+
+      <footer class="footer">
+        <p>
+          MarketLens by
+          <a href="../my-portfolio/index.html">Zachary LeCroy</a>
+          · Data via Financial Modeling Prep · Educational portfolio project
+        </p>
+      </footer>
+    </div><!-- /.main -->
+  </div><!-- /.app -->
+
+  <!-- ============ MOBILE bottom tab bar ============ -->
+  <nav class="tabbar" aria-label="Primary">
+    <button class="tab is-active" data-view="dashboard">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </button>
+    <button class="tab tab--primary" id="tabAdd" aria-label="Add to watchlist">
+      <span class="tab__plus"><i data-lucide="plus"></i></span>
+    </button>
+    <button class="tab" data-view="advisor">
+      <i data-lucide="compass"></i> Find
+    </button>
   </nav>
 
-  <!-- ============ DASHBOARD VIEW ============ -->
-  <div id="view-dashboard">
-  <header class="hero">
-    <h1 class="hero__title">MarketLens</h1>
-    <p class="hero__subtitle">
-      Real market data &amp; news, surfaced cleanly. No predictions — just the facts.
-    </p>
-
-    <form id="searchForm" class="search" autocomplete="off">
-      <input id="searchInput" class="search__input" type="text"
-        placeholder="Search a ticker (e.g. AAPL, TSLA, NVDA, MSFT)"
-        aria-label="Search a stock ticker" />
-      <button class="search__btn" type="submit">Search</button>
-    </form>
-  </header>
-
-  <main class="container">
-    <!-- Status line (loading / error) -->
-    <div id="status" class="status" role="status" aria-live="polite"></div>
-
-    <div class="layout">
-      <!-- Left column: watchlist -->
-      <aside class="watchlist">
-        <h2 class="panel__title">Watchlist</h2>
-        <form id="watchForm" class="watchlist__add">
-          <input id="watchInput" class="watchlist__input" type="text"
-            placeholder="Add ticker" aria-label="Add ticker to watchlist" />
-          <button class="watchlist__btn" type="submit" aria-label="Add to watchlist">+</button>
-        </form>
-        <ul id="watchlist" class="watchlist__items"></ul>
-      </aside>
-
-      <!-- Right column: quote, stats, chart, news -->
-      <section class="content">
-        <!-- Quote card -->
-        <article id="quoteCard" class="card quote">
-          <div class="quote__head">
-            <div>
-              <h2 id="quoteName" class="quote__name">—</h2>
-              <span id="quoteMeta" class="quote__meta"></span>
-            </div>
-            <div class="quote__price-block">
-              <span id="quotePrice" class="quote__price">—</span>
-              <span id="quoteChange" class="quote__change"></span>
-            </div>
-          </div>
-        </article>
-
-        <!-- Key stats -->
-        <article class="card">
-          <h3 class="card__title">Key Stats</h3>
-          <div id="statsGrid" class="stats"></div>
-        </article>
-
-        <!-- Chart -->
-        <article class="card">
-          <div class="card__header">
-            <h3 class="card__title">Price History</h3>
-            <div class="range-toggle" id="rangeToggle" role="group" aria-label="Chart range">
-              <button class="range-btn" data-range="1D">1D</button>
-              <button class="range-btn" data-range="1W">1W</button>
-              <button class="range-btn" data-range="1M">1M</button>
-              <button class="range-btn is-active" data-range="3M">3M</button>
-              <button class="range-btn" data-range="6M">6M</button>
-              <button class="range-btn" data-range="1Y">1Y</button>
-              <span class="range-sep" aria-hidden="true"></span>
-              <button class="range-btn" data-range="1H">1H</button>
-              <button class="range-btn" data-range="4H">4H</button>
-            </div>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="priceChart" height="320"></canvas>
-          </div>
-        </article>
-
-        <!-- News -->
-        <article class="card">
-          <h3 class="card__title">Latest News</h3>
-          <ul id="newsList" class="news"></ul>
-        </article>
-      </section>
-    </div>
-  </main>
-  </div><!-- /#view-dashboard -->
-
-  <!-- ============ ADVISOR VIEW ============ -->
-  <div id="view-advisor" class="view--hidden">
-    <main class="container container--advisor">
-      <header class="adv-hero">
-        <h1 class="adv-hero__title">Find Stocks</h1>
-        <p class="adv-hero__subtitle">
-          Answer a few questions and we'll match well-known stocks &amp; ETFs to
-          your profile — with a plain-English reason for every pick.
-        </p>
-      </header>
-
-      <!-- Educational notice — scoped to the Advisor feature ONLY. -->
-      <div class="adv-disclaimer" role="note">
-        <strong>Educational only — not financial advice.</strong>
-        These rule-based matches are for learning and illustration. They are not
-        personalized recommendations. Do your own research and consider a
-        licensed advisor before investing.
-      </div>
-
-      <section id="advisorFormPane" class="card adv-pane">
-        <h2 class="card__title">Your profile</h2>
-        <div id="advisorFormHost"></div>
-      </section>
-
-      <section id="advisorResultsPane" class="adv-pane view--hidden">
-        <div id="advisorResults"></div>
-      </section>
-    </main>
-  </div><!-- /#view-advisor -->
-
-  <footer class="footer">
-    <p>
-      MarketLens by
-      <a href="../my-portfolio/index.html">Zachary LeCroy</a>
-      · Data via Financial Modeling Prep · Educational portfolio project
-    </p>
-  </footer>
-
-  <!-- Chart.js from CDN (no build step) -->
+  <!-- Chart.js + Lucide icons from CDN (no build step) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- App scripts (small, focused modules; load order matters) -->
   <script src="js/sample-data.js"></script>
@@ -161,5 +187,9 @@
   <script src="js/advisor-universe.js"></script>
   <script src="js/advisor.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    // Render all static Lucide icons present at load.
+    if (window.lucide) window.lucide.createIcons();
+  </script>
 </body>
 </html>

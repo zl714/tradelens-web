@@ -8,7 +8,16 @@
   function setStatus(message, kind) {
     var el = document.getElementById("status");
     el.className = "status" + (kind ? " status--" + kind : "");
-    el.textContent = message || "";
+    if (!message) { el.textContent = ""; return; }
+    el.textContent = message;
+    if (kind === "error") {
+      var retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "status__retry";
+      retry.textContent = "Retry";
+      retry.addEventListener("click", function () { loadSymbol(currentSymbol); });
+      el.appendChild(retry);
+    }
   }
 
   function setBadge(isDemo) {
@@ -96,10 +105,22 @@
     loadSymbol(symbol);
   }
 
+  // Mobile bottom-tab primary action: jump to the watchlist add input.
+  function initTabAdd() {
+    var btn = document.getElementById("tabAdd");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      showView("dashboard");
+      var input = document.getElementById("watchInput");
+      if (input) { input.scrollIntoView({ block: "center" }); input.focus(); }
+    });
+  }
+
   function init() {
     initSearch();
     initRangeToggle();
     initViewNav();
+    initTabAdd();
     window.MLWatchlist.init(loadSymbol);
     if (window.MLAdvisor) window.MLAdvisor.init(loadSymbolInDashboard);
 
