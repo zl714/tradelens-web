@@ -1,13 +1,13 @@
-# MarketLens
+# TradeLens
 
 **A clean, honest dashboard for real stock quotes, charts, and news.**
 
-MarketLens surfaces live market data and headlines for any ticker — no
+TradeLens surfaces live market data and headlines for any ticker — no
 predictions, no hype, just the facts presented cleanly. It is the working,
 honest core of a larger idea (an AI-assisted stock app), deliberately scoped to
 the part that always works: real data, displayed well.
 
-> **Honest framing:** MarketLens does **not** predict prices or give financial
+> **Honest framing:** TradeLens does **not** predict prices or give financial
 > advice. It is a portfolio project that demonstrates REST API integration, a
 > Python serverless backend, data visualization, and a responsive frontend.
 > When no API key is configured (or the upstream API is unavailable), it shows

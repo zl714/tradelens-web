@@ -1,4 +1,4 @@
-"""Bundled realistic SAMPLE dataset for MarketLens.
+"""Bundled realistic SAMPLE dataset for TradeLens.
 
 Used as a robust fallback when no FMP_API_KEY is configured or the upstream
 call fails / is rate-limited. The numbers are plausible, clearly-labelled

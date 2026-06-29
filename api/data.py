@@ -1,4 +1,4 @@
-"""MarketLens API proxy (Vercel Python serverless function).
+"""TradeLens API proxy (Vercel Python serverless function).
 
 Proxies the Financial Modeling Prep (FMP) free-tier API using ONLY the Python
 standard library so there is no requirements.txt / dependency risk.
@@ -65,7 +65,7 @@ def _fmp_url(endpoint, symbol, api_key):
 
 def _fetch_upstream(url):
     """Fetch + parse JSON from FMP. Returns parsed data or raises."""
-    req = urllib.request.Request(url, headers={"User-Agent": "MarketLens/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "TradeLens/1.0"})
     with urllib.request.urlopen(req, timeout=UPSTREAM_TIMEOUT) as resp:
         raw = resp.read().decode("utf-8")
     return json.loads(raw)
