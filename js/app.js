@@ -75,18 +75,39 @@
     });
   }
 
-  // Simple two-view switcher (Dashboard <-> Advisor) driven by [data-view].
+  // View switcher driven by [data-view] + hash routing (#/journal, #/rules, …).
+  var VIEWS = ["dashboard", "advisor", "journal", "rules"];
+
   function showView(view) {
-    var dash = document.getElementById("view-dashboard");
-    var adv = document.getElementById("view-advisor");
-    var isAdvisor = view === "advisor";
-    if (dash) dash.classList.toggle("view--hidden", isAdvisor);
-    if (adv) adv.classList.toggle("view--hidden", !isAdvisor);
+    if (VIEWS.indexOf(view) === -1) view = "dashboard";
+    VIEWS.forEach(function (v) {
+      var el = document.getElementById("view-" + v);
+      if (el) el.classList.toggle("view--hidden", v !== view);
+    });
     document.querySelectorAll("[data-view]").forEach(function (el) {
       el.classList.toggle("is-active", el.getAttribute("data-view") === view);
     });
-    if (isAdvisor && window.MLAdvisor) window.MLAdvisor.onShow();
+    if (view === "advisor" && window.MLAdvisor) window.MLAdvisor.onShow();
+    if (view === "journal" && window.MLJournal) window.MLJournal.onShow();
+    if (view === "rules" && window.MLRules) window.MLRules.onShow();
+
+    // Keep the hash in sync without triggering a second hashchange render.
+    var target = "#/" + view;
+    if (location.hash !== target) {
+      if (history.replaceState) history.replaceState(null, "", target);
+      else location.hash = target;
+    }
     window.scrollTo(0, 0);
+  }
+
+  // Map a URL hash to a known view. Accepts #/journal, #journal, #/playbook, etc.
+  function viewFromHash() {
+    var h = (location.hash || "").replace(/^#\/?/, "").toLowerCase();
+    if (h === "rules" || h === "playbook") return "rules";
+    if (h === "journal") return "journal";
+    if (h === "advisor" || h === "find") return "advisor";
+    if (h === "dashboard") return "dashboard";
+    return null;
   }
 
   function initViewNav() {
@@ -95,6 +116,10 @@
         e.preventDefault();
         showView(el.getAttribute("data-view"));
       });
+    });
+    // Respond to back/forward and manual hash edits.
+    window.addEventListener("hashchange", function () {
+      showView(viewFromHash() || "dashboard");
     });
   }
 
@@ -123,10 +148,17 @@
     initTabAdd();
     window.MLWatchlist.init(loadSymbol);
     if (window.MLAdvisor) window.MLAdvisor.init(loadSymbolInDashboard);
+    if (window.MLJournal) window.MLJournal.init();
+    if (window.MLRules) window.MLRules.init();
 
-    // Load the first watchlist symbol (or default) on startup.
+    // Load the first watchlist symbol (or default) on startup. The dashboard
+    // data still loads even if another view is showing — it's just hidden.
     var list = window.MLWatchlist.getList();
     loadSymbol(list[0] || DEFAULT_SYMBOL);
+
+    // Honor a deep-link hash on first load (e.g. #/journal, #/rules).
+    var initialView = viewFromHash();
+    if (initialView) showView(initialView);
   }
 
   // Exposed so other modules (advisor) can drive navigation/data loading.

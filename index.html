@@ -22,11 +22,17 @@
       </a>
       <div class="nav-group-label">Menu</div>
       <nav class="sidebar__nav">
-        <a class="navitem is-active" href="#" data-view="dashboard">
+        <a class="navitem is-active" href="#/dashboard" data-view="dashboard">
           <i data-lucide="layout-dashboard"></i> Dashboard
         </a>
-        <a class="navitem" href="#" data-view="advisor">
+        <a class="navitem" href="#/advisor" data-view="advisor">
           <i data-lucide="compass"></i> Find Stocks
+        </a>
+        <a class="navitem" href="#/journal" data-view="journal">
+          <i data-lucide="notebook-pen"></i> Journal
+        </a>
+        <a class="navitem" href="#/rules" data-view="rules">
+          <i data-lucide="list-checks"></i> Playbook
         </a>
       </nav>
       <div class="sidebar__foot">
@@ -150,6 +156,64 @@
         </main>
       </div><!-- /#view-advisor -->
 
+      <!-- ============ JOURNAL VIEW ============ -->
+      <div id="view-journal" class="view--hidden">
+        <main class="container">
+          <header class="view-hero">
+            <div class="view-hero__lead">
+              <h1 class="view-hero__title">Trade Journal</h1>
+              <p class="view-hero__subtitle">
+                Log every trade and let the numbers speak — P&amp;L, R-multiple, and
+                win rate are computed straight from your entries. No AI, no grading.
+              </p>
+            </div>
+            <div class="view-hero__actions">
+              <button class="btn btn--secondary btn--sm" id="jrExport" type="button">
+                <i data-lucide="download"></i> Export
+              </button>
+              <button class="btn btn--secondary btn--sm" id="jrImport" type="button">
+                <i data-lucide="upload"></i> Import
+              </button>
+              <button class="btn btn--ghost btn--sm" id="jrReset" type="button">Reset demo</button>
+              <input id="jrFile" type="file" accept="application/json,.json" hidden />
+            </div>
+          </header>
+
+          <div id="journalKpis"></div>
+          <div id="journalForm"></div>
+          <div id="journalTable"></div>
+        </main>
+      </div><!-- /#view-journal -->
+
+      <!-- ============ PLAYBOOK / RULES VIEW ============ -->
+      <div id="view-rules" class="view--hidden">
+        <main class="container container--advisor">
+          <header class="view-hero">
+            <div class="view-hero__lead">
+              <h1 class="view-hero__title">Playbook</h1>
+              <p class="view-hero__subtitle">
+                Write down the rules you actually trade by. Group them by Entry, Exit,
+                Risk, Mindset, or General — then keep free-form notes below.
+              </p>
+            </div>
+            <div class="view-hero__actions">
+              <button class="btn btn--secondary btn--sm" id="pbExport" type="button">
+                <i data-lucide="download"></i> Export
+              </button>
+              <button class="btn btn--secondary btn--sm" id="pbImport" type="button">
+                <i data-lucide="upload"></i> Import
+              </button>
+              <button class="btn btn--ghost btn--sm" id="pbReset" type="button">Reset starters</button>
+              <input id="pbFile" type="file" accept="application/json,.json" hidden />
+            </div>
+          </header>
+
+          <div id="rulesForm"></div>
+          <div id="rulesList"></div>
+          <div id="rulesNotes"></div>
+        </main>
+      </div><!-- /#view-rules -->
+
       <footer class="footer">
         <p>
           MarketLens by
@@ -165,11 +229,17 @@
     <button class="tab is-active" data-view="dashboard">
       <i data-lucide="layout-dashboard"></i> Dashboard
     </button>
+    <button class="tab" data-view="advisor">
+      <i data-lucide="compass"></i> Find
+    </button>
     <button class="tab tab--primary" id="tabAdd" aria-label="Add to watchlist">
       <span class="tab__plus"><i data-lucide="plus"></i></span>
     </button>
-    <button class="tab" data-view="advisor">
-      <i data-lucide="compass"></i> Find
+    <button class="tab" data-view="journal">
+      <i data-lucide="notebook-pen"></i> Journal
+    </button>
+    <button class="tab" data-view="rules">
+      <i data-lucide="list-checks"></i> Playbook
     </button>
   </nav>
 
@@ -186,6 +256,8 @@
   <script src="js/watchlist.js"></script>
   <script src="js/advisor-universe.js"></script>
   <script src="js/advisor.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/rules.js"></script>
   <script src="js/app.js"></script>
   <script>
     // Render all static Lucide icons present at load.
