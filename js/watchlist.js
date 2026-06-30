@@ -73,8 +73,9 @@
         '<span class="wl-id"><span class="wl-sym">' + s + "</span>" +
         '<span class="wl-co" data-co="' + s + '">—</span></span>' +
         '<span class="wl-spark" data-spark="' + s + '"></span>' +
+        '<span class="wl-vals">' +
         '<span class="wl-price num" data-price="' + s + '">—</span>' +
-        '<span class="wl-pill num" data-chg="' + s + '">…</span>' +
+        '<span class="wl-pill num" data-chg="' + s + '">…</span></span>' +
         '<button class="wl-remove" data-remove="' + s +
         '" aria-label="Remove ' + s + '"><i data-lucide="x"></i></button></li>';
     }).join("");
@@ -86,7 +87,7 @@
   // Build a tiny inline SVG sparkline from a closes series.
   function sparkSvg(closes, up) {
     if (!closes || closes.length < 2) return "";
-    var w = 64, h = 24, pad = 2;
+    var w = 48, h = 22, pad = 2;
     var min = Math.min.apply(null, closes), max = Math.max.apply(null, closes);
     var span = max - min || 1;
     var step = (w - pad * 2) / (closes.length - 1);
@@ -101,7 +102,7 @@
       '" fill="none"><polyline points="' + pts.join(" ") +
       '" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round" ' +
       'stroke-linecap="round"/><circle cx="' + last[0] + '" cy="' + last[1] +
-      '" r="1.8" fill="' + color + '"/></svg>';
+      '" r="1.6" fill="' + color + '"/></svg>';
   }
 
   function cssEscape(s) { return String(s).replace(/"/g, '\\"'); }

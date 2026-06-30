@@ -63,15 +63,21 @@
             <section class="content">
               <!-- Quote header -->
               <article id="quoteCard" class="card quote">
-                <div class="quote__id">
-                  <span id="quoteSymbol" class="quote__symbol num">—</span>
-                  <span id="quoteCompany" class="quote__company"></span>
-                  <span id="quoteExchange" class="chip"></span>
+                <div class="quote__top">
+                  <div class="quote__lead">
+                    <div class="quote__id">
+                      <span id="quoteSymbol" class="quote__symbol num">—</span>
+                      <span id="quoteExchange" class="chip"></span>
+                    </div>
+                    <span id="quoteCompany" class="quote__company"></span>
+                    <div class="quote__price-row">
+                      <span id="quotePrice" class="quote__price num">—</span>
+                      <span id="quoteChange" class="quote__change num"></span>
+                    </div>
+                  </div>
+                  <div id="quoteSpark" class="quote__spark" aria-hidden="true"></div>
                 </div>
-                <div class="quote__price-row">
-                  <span id="quotePrice" class="quote__price num">—</span>
-                  <span id="quoteChange" class="quote__change num"></span>
-                </div>
+                <dl id="quoteMicro" class="quote__micro"></dl>
               </article>
 
               <!-- Chart -->
@@ -101,28 +107,46 @@
                 <div id="statsGrid" class="stats"></div>
                 <div id="range52Host"></div>
               </article>
-
-              <!-- News -->
-              <article class="card">
-                <h3 class="card__title">Latest News</h3>
-                <ul id="newsList" class="news"></ul>
-              </article>
             </section>
 
-            <!-- Right column: watchlist -->
-            <aside class="watchlist card">
-              <div class="card__header">
-                <h3 class="card__title">Watchlist</h3>
-              </div>
-              <form id="watchForm" class="watchlist__add">
-                <input id="watchInput" class="watchlist__input" type="text"
-                  placeholder="Add ticker" aria-label="Add ticker to watchlist" />
-                <button class="btn btn--secondary btn--icon btn--sm" type="submit"
-                  aria-label="Add to watchlist"><i data-lucide="plus"></i></button>
-              </form>
-              <ul id="watchlist" class="watchlist__items"></ul>
+            <!-- Right rail: watchlist + markets + movers -->
+            <aside class="rail">
+              <section class="watchlist card">
+                <div class="card__header">
+                  <h3 class="card__title">Watchlist</h3>
+                </div>
+                <form id="watchForm" class="watchlist__add">
+                  <input id="watchInput" class="watchlist__input" type="text"
+                    placeholder="Add ticker" aria-label="Add ticker to watchlist" />
+                  <button class="btn btn--secondary btn--icon btn--sm" type="submit"
+                    aria-label="Add to watchlist"><i data-lucide="plus"></i></button>
+                </form>
+                <ul id="watchlist" class="watchlist__items"></ul>
+              </section>
+
+              <section class="card markets">
+                <div class="card__header">
+                  <h3 class="card__title">Markets</h3>
+                  <span class="card__eyebrow">Indices</span>
+                </div>
+                <ul id="marketsList" class="mkt-list"></ul>
+              </section>
+
+              <section class="card movers">
+                <div class="card__header">
+                  <h3 class="card__title">Movers</h3>
+                  <span class="card__eyebrow">Today</span>
+                </div>
+                <ul id="moversList" class="mover-list"></ul>
+              </section>
             </aside>
           </div>
+
+          <!-- News — full width below the two-column layout -->
+          <article class="card news-card">
+            <h3 class="card__title">Latest News</h3>
+            <ul id="newsList" class="news"></ul>
+          </article>
         </main>
       </div><!-- /#view-dashboard -->
 
@@ -253,6 +277,7 @@
   <script src="js/api.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/markets.js"></script>
   <script src="js/watchlist.js"></script>
   <script src="js/advisor-universe.js"></script>
   <script src="js/advisor.js"></script>

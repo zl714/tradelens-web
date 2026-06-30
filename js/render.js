@@ -4,7 +4,64 @@
 
   var F = window.MLFormat;
 
+  var UP = "#16C784", DOWN = "#F23645";
+
   function changeClass(n) { return Number(n) >= 0 ? "is-up" : "is-down"; }
+
+  // Inline hero sparkline from a closes series, colored by net direction with a
+  // matching faint area fill and an end dot (Robinhood signature, in miniature).
+  function heroSpark(closes) {
+    if (!closes || closes.length < 2) return "";
+    var w = 132, h = 44, pad = 3;
+    var min = Math.min.apply(null, closes), max = Math.max.apply(null, closes);
+    var span = max - min || 1;
+    var step = (w - pad * 2) / (closes.length - 1);
+    var pts = closes.map(function (c, i) {
+      var x = pad + i * step;
+      var y = pad + (h - pad * 2) * (1 - (c - min) / span);
+      return x.toFixed(1) + "," + y.toFixed(1);
+    });
+    var up = closes[closes.length - 1] >= closes[0];
+    var color = up ? UP : DOWN;
+    var last = pts[pts.length - 1].split(",");
+    var area = pts.join(" ") + " " + (w - pad).toFixed(1) + "," + (h - pad) +
+      " " + pad + "," + (h - pad);
+    var gid = "hg" + (up ? "u" : "d");
+    return '<svg viewBox="0 0 ' + w + " " + h + '" width="' + w + '" height="' + h +
+      '" fill="none" preserveAspectRatio="none">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + color + '" stop-opacity="0.14"/>' +
+      '<stop offset="1" stop-color="' + color + '" stop-opacity="0"/>' +
+      '</linearGradient></defs>' +
+      '<polygon points="' + area + '" fill="url(#' + gid + ')"/>' +
+      '<polyline points="' + pts.join(" ") + '" stroke="' + color +
+      '" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.2" fill="' + color + '"/></svg>';
+  }
+
+  function microCell(label, value) {
+    return '<div class="quote__micro-cell"><dt class="quote__micro-label">' +
+      F.escapeHtml(label) + '</dt><dd class="quote__micro-value num">' +
+      value + "</dd></div>";
+  }
+
+  function renderHeroExtras(q, history) {
+    var spark = document.getElementById("quoteSpark");
+    var micro = document.getElementById("quoteMicro");
+    if (spark) {
+      var hist = (history && history.historical) || [];
+      var closes = hist.slice(0, 30).map(function (h) { return Number(h.close); })
+        .filter(function (n) { return !isNaN(n); }).reverse();
+      spark.innerHTML = heroSpark(closes);
+    }
+    if (micro) {
+      micro.innerHTML =
+        microCell("Open", F.formatPrice(q.open)) +
+        microCell("High", F.formatPrice(q.dayHigh)) +
+        microCell("Low", F.formatPrice(q.dayLow)) +
+        microCell("Vol", F.formatCompact(q.volume));
+    }
+  }
 
   // Split "$212.45" so the cents render one step smaller/lighter (spec anatomy).
   function renderHeroPrice(el, price) {
@@ -20,7 +77,7 @@
       '<span class="quote__cents">.' + F.escapeHtml(parts[1] || "00") + "</span>";
   }
 
-  function renderQuote(quote, profile) {
+  function renderQuote(quote, profile, history) {
     var q = Array.isArray(quote) ? quote[0] : quote;
     var p = Array.isArray(profile) ? profile[0] : profile;
     if (!q) return;
@@ -43,6 +100,8 @@
       '<span class="quote__change-glyph">' + (up ? "▲" : "▼") + "</span>" +
       F.escapeHtml(F.formatSignedPrice(q.change)) + " (" +
       F.escapeHtml(F.formatPercent(q.changesPercentage)) + ")";
+
+    renderHeroExtras(q, history);
   }
 
   function statCell(label, value) {

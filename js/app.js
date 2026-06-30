@@ -41,7 +41,7 @@
         setBadge(bundle.source === "demo");
         return;
       }
-      window.MLRender.renderQuote(bundle.quote, bundle.profile);
+      window.MLRender.renderQuote(bundle.quote, bundle.profile, bundle.history);
       window.MLRender.renderStats(bundle.quote);
       window.MLRender.renderNews(bundle.news);
       window.MLChart.setData(bundle);

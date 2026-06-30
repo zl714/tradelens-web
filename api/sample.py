@@ -270,3 +270,19 @@ def _build_dataset():
 
 
 SAMPLE = _build_dataset()
+
+# Major market indices for the dashboard "Markets" overview panel. Not tied to
+# any single symbol and require no API key -- plausible, clearly-demo values so
+# the panel always populates in the demo fallback.
+MARKETS = [
+    {"symbol": "SPX", "name": "S&P 500", "value": 5431.60,
+     "change": 22.78, "changesPercentage": 0.42},
+    {"symbol": "IXIC", "name": "Nasdaq Comp", "value": 17689.36,
+     "change": 141.85, "changesPercentage": 0.81},
+    {"symbol": "DJI", "name": "Dow Jones", "value": 38778.10,
+     "change": -50.42, "changesPercentage": -0.13},
+    {"symbol": "VIX", "name": "Volatility", "value": 13.24,
+     "change": -0.36, "changesPercentage": -2.65, "decimals": 2},
+    {"symbol": "TNX", "name": "10-Yr Yield", "value": 4.28,
+     "change": 0.02, "changesPercentage": 0.47, "unit": "%", "decimals": 2},
+]
