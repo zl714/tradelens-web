@@ -27,12 +27,12 @@
   --rim-light:     rgba(255,255,255,0.04);
 
   /* ---- ACCENT (electric blue — the ONE interactive accent) ---- */
-  --accent-300: #93C5FD;
-  --accent-400: #60A5FA;
-  --accent-500: #3B82F6;
-  --accent-600: #2563EB;
-  --accent-soft: rgba(59,130,246,0.12);
-  --focus-ring: 0 0 0 3px rgba(59,130,246,0.35);
+  --accent-300: #FCD34D;
+  --accent-400: #FBBF24;
+  --accent-500: #F59E0B;
+  --accent-600: #D97706;
+  --accent-soft: rgba(245,158,11,0.12);
+  --focus-ring: 0 0 0 3px rgba(245,158,11,0.35);
 
   /* ---- SEMANTIC DATA AXIS (separate from accent; green=up red=down) ---- */
   --up:        #16C784;
@@ -1025,7 +1025,7 @@ a.news__title:hover { color: var(--accent-400); }
    ============================================================ */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: var(--sp-5);
   margin-bottom: var(--sp-6);
 }
@@ -1038,6 +1038,8 @@ a.news__title:hover { color: var(--accent-400); }
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
+  min-width: 0;
+  overflow: hidden;
 }
 .kpi__label {
   color: var(--text-muted);
@@ -1047,7 +1049,7 @@ a.news__title:hover { color: var(--accent-400); }
 }
 .kpi__value {
   color: var(--text-hi);
-  font-size: var(--fs-h1);
+  font-size: var(--fs-h2);
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: var(--ls-heading);
