@@ -26,10 +26,15 @@ import urllib.request
 import urllib.error
 import json
 import os
+import sys
+
+# Vercel's Python runtime imports this file as a module without putting api/
+# on sys.path, so the sibling sample.py import needs an explicit path entry.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sample import SAMPLE  # bundled fallback dataset (api/sample.py)
 
-FMP_BASE = "https://financialmodelingprep.com/api/v3"
+FMP_BASE = "https://financialmodelingprep.com/stable"
 # Daily/static endpoints fall back to bundled demo data on any failure.
 CORE_ENDPOINTS = ("quote", "profile", "history", "news")
 # Intraday endpoints disable their toggle (return null) when tier-restricted.
@@ -39,28 +44,50 @@ UPSTREAM_TIMEOUT = 8  # seconds
 
 
 def _fmp_url(endpoint, symbol, api_key):
-    """Build the upstream FMP URL for a given endpoint."""
+    """Build the upstream FMP URL for a given endpoint (stable API).
+
+    FMP retired the legacy /api/v3 paths for keys issued after Aug 2025; the
+    /stable API uses ?symbol= query params instead of path segments.
+    """
     s = quote(symbol)
     if endpoint == "quote":
-        return f"{FMP_BASE}/quote/{s}?apikey={api_key}"
+        return f"{FMP_BASE}/quote?symbol={s}&apikey={api_key}"
     if endpoint == "profile":
-        return f"{FMP_BASE}/profile/{s}?apikey={api_key}"
+        return f"{FMP_BASE}/profile?symbol={s}&apikey={api_key}"
     if endpoint == "history":
-        # ~1 year of daily candles; the frontend slices to 1M..1Y / 1W.
-        return (
-            f"{FMP_BASE}/historical-price-full/{s}"
-            f"?serietype=line&timeseries=365&apikey={api_key}"
-        )
+        # ~1 year of daily closes; the frontend slices to 1M..1Y / 1W.
+        return f"{FMP_BASE}/historical-price-eod/light?symbol={s}&apikey={api_key}"
     if endpoint == "news":
-        return f"{FMP_BASE}/stock_news?tickers={s}&limit=12&apikey={api_key}"
+        return f"{FMP_BASE}/news/stock?symbols={s}&limit=12&apikey={api_key}"
     if endpoint == "chart1h":
-        return f"{FMP_BASE}/historical-chart/1hour/{s}?apikey={api_key}"
+        return f"{FMP_BASE}/historical-chart/1hour?symbol={s}&apikey={api_key}"
     if endpoint == "chart4h":
-        return f"{FMP_BASE}/historical-chart/4hour/{s}?apikey={api_key}"
+        return f"{FMP_BASE}/historical-chart/4hour?symbol={s}&apikey={api_key}"
     if endpoint == "chart1d":
         # Finer intraday bars for the single-day (1D) view.
-        return f"{FMP_BASE}/historical-chart/15min/{s}?apikey={api_key}"
+        return f"{FMP_BASE}/historical-chart/15min?symbol={s}&apikey={api_key}"
     return None
+
+
+def _adapt(endpoint, data, symbol):
+    """Normalize stable-API payloads to the v3 shapes the frontend expects."""
+    if endpoint == "quote" and isinstance(data, list):
+        # stable renamed changesPercentage -> changePercentage; alias it back.
+        return [
+            {**item, "changesPercentage": item.get("changePercentage")}
+            for item in data
+            if isinstance(item, dict)
+        ]
+    if endpoint == "history" and isinstance(data, list):
+        # stable eod/light returns a flat [{date, price, volume}] list (latest
+        # first); v3 wrapped it as {symbol, historical: [{date, close}]}.
+        historical = [
+            {"date": d.get("date"), "close": d.get("price"), "volume": d.get("volume")}
+            for d in data[:365]
+            if isinstance(d, dict)
+        ]
+        return {"symbol": symbol, "historical": historical}
+    return data
 
 
 def _fetch_upstream(url):
@@ -139,7 +166,7 @@ class handler(BaseHTTPRequestHandler):
 
         url = _fmp_url(endpoint, symbol, api_key)
         try:
-            data = _fetch_upstream(url)
+            data = _adapt(endpoint, _fetch_upstream(url), symbol)
             if _is_usable(endpoint, data):
                 payload = {
                     "source": "live",
