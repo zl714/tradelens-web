@@ -314,6 +314,17 @@ a:hover { color: var(--accent-400); }
   background: var(--warn);
 }
 .badge--hidden { display: none; }
+.badge--live {
+  background: var(--up-soft);
+  color: var(--up);
+}
+.badge--live::before { background: var(--up); }
+/* "Sample" provenance chip on rail/news cards while data is bundled. */
+.chip--sample {
+  background: var(--warn-soft, rgba(251,191,36,0.12));
+  color: var(--warn);
+  cursor: help;
+}
 
 /* ---------- Status / states ---------- */
 .status {
@@ -615,6 +626,11 @@ a.news__title:hover { color: var(--accent-400); }
   outline: none;
 }
 .watchlist__input:focus { border-color: var(--accent-500); box-shadow: var(--focus-ring); }
+.watchlist__msg {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-label);
+  color: var(--warn);
+}
 .watchlist__items { list-style: none; display: flex; flex-direction: column; }
 
 .wl-row {

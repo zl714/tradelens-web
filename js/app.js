@@ -22,15 +22,18 @@
 
   function setBadge(isDemo) {
     var badge = document.getElementById("dataBadge");
-    badge.classList.toggle("badge--hidden", !isDemo);
+    badge.classList.remove("badge--hidden");
+    badge.classList.toggle("badge--live", !isDemo);
+    badge.textContent = isDemo ? "Demo data" : "Live data";
     badge.title = isDemo
       ? "Showing bundled sample data (no live API key configured or upstream unavailable)."
-      : "";
+      : "Quotes, charts, and history are live from Financial Modeling Prep.";
   }
 
-  function loadSymbol(symbol) {
+  function loadSymbol(symbol, opts) {
     var sym = String(symbol || "").trim().toUpperCase();
     if (!sym) return;
+    var scrollToQuote = !!(opts && opts.scrollToQuote);
     currentSymbol = sym;
     setStatus("Loading " + sym + "…", "loading");
     window.MLWatchlist.setActive(sym);
@@ -42,11 +45,17 @@
         return;
       }
       window.MLRender.renderQuote(bundle.quote, bundle.profile, bundle.history);
-      window.MLRender.renderStats(bundle.quote);
-      window.MLRender.renderNews(bundle.news);
+      window.MLRender.renderStats(bundle.quote, bundle.profile);
+      window.MLRender.renderNews(bundle.news, bundle.newsSource);
       window.MLChart.setData(bundle);
       setBadge(bundle.source === "demo");
       setStatus("");
+      if (scrollToQuote) {
+        // On mobile the rail panels sit above the quote card, so a search
+        // otherwise gives zero visible feedback.
+        var card = document.getElementById("quoteCard");
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }).catch(function () {
       setStatus("Something went wrong loading data. Showing demo data.", "error");
       setBadge(true);
@@ -58,7 +67,7 @@
       e.preventDefault();
       var input = document.getElementById("searchInput");
       var val = input.value.trim().toUpperCase();
-      if (val) { loadSymbol(val); input.value = ""; }
+      if (val) { loadSymbol(val, { scrollToQuote: true }); input.value = ""; }
     });
   }
 
@@ -77,9 +86,16 @@
 
   // View switcher driven by [data-view] + hash routing (#/journal, #/rules, …).
   var VIEWS = ["dashboard", "advisor", "journal", "rules"];
+  var VIEW_TITLES = {
+    dashboard: "TradeLens — Live Stock Data & News",
+    advisor: "Find Stocks — TradeLens",
+    journal: "Journal — TradeLens",
+    rules: "Playbook — TradeLens"
+  };
 
   function showView(view) {
     if (VIEWS.indexOf(view) === -1) view = "dashboard";
+    document.title = VIEW_TITLES[view];
     VIEWS.forEach(function (v) {
       var el = document.getElementById("view-" + v);
       if (el) el.classList.toggle("view--hidden", v !== view);

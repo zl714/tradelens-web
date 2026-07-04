@@ -12,22 +12,22 @@
   var TICKERS = {
     AAPL: { name: "Apple Inc.", price: 212.45, chgPct: 1.18, chg: 2.48,
       marketCap: 3.25e12, pe: 32.6, yearHigh: 237.49, yearLow: 164.08,
-      volume: 48213400, open: 210.30, prevClose: 209.97, dayLow: 209.55,
+      volume: 48213400, avgVolume: 56800000, open: 210.30, prevClose: 209.97, dayLow: 209.55,
       dayHigh: 213.88, exchange: "NASDAQ", sector: "Technology",
       industry: "Consumer Electronics", seed: 11 },
     TSLA: { name: "Tesla, Inc.", price: 246.83, chgPct: -2.04, chg: -5.14,
       marketCap: 786e9, pe: 70.1, yearHigh: 299.29, yearLow: 138.80,
-      volume: 92140500, open: 251.10, prevClose: 251.97, dayLow: 244.20,
+      volume: 92140500, avgVolume: 101200000, open: 251.10, prevClose: 251.97, dayLow: 244.20,
       dayHigh: 252.66, exchange: "NASDAQ", sector: "Consumer Cyclical",
       industry: "Auto Manufacturers", seed: 22 },
     NVDA: { name: "NVIDIA Corporation", price: 131.26, chgPct: 3.41, chg: 4.33,
       marketCap: 3.22e12, pe: 64.8, yearHigh: 140.76, yearLow: 66.25,
-      volume: 235600000, open: 127.55, prevClose: 126.93, dayLow: 127.01,
+      volume: 235600000, avgVolume: 248900000, open: 127.55, prevClose: 126.93, dayLow: 127.01,
       dayHigh: 132.40, exchange: "NASDAQ", sector: "Technology",
       industry: "Semiconductors", seed: 33 },
     MSFT: { name: "Microsoft Corporation", price: 449.78, chgPct: 0.62, chg: 2.77,
       marketCap: 3.34e12, pe: 38.4, yearHigh: 468.35, yearLow: 362.90,
-      volume: 18420300, open: 447.20, prevClose: 447.01, dayLow: 446.10,
+      volume: 18420300, avgVolume: 21100000, open: 447.20, prevClose: 447.01, dayLow: 446.10,
       dayHigh: 451.55, exchange: "NASDAQ", sector: "Technology",
       industry: "Software - Infrastructure", seed: 44 }
   };
@@ -134,7 +134,8 @@
         dayLow: t.dayLow, dayHigh: t.dayHigh,
         yearHigh: t.yearHigh, yearLow: t.yearLow,
         marketCap: t.marketCap, exchange: t.exchange,
-        volume: t.volume, open: t.open, previousClose: t.prevClose,
+        volume: t.volume, avgVolume: t.avgVolume,
+        open: t.open, previousClose: t.prevClose,
         pe: t.pe, eps: Math.round((t.price / t.pe) * 100) / 100
       }],
       profile: [{

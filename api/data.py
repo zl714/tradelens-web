@@ -112,11 +112,18 @@ def _is_usable(endpoint, data):
 
 
 def _demo_payload(endpoint, symbol):
-    """Return bundled sample data for the requested endpoint + symbol."""
+    """Return bundled sample data for the requested endpoint + symbol.
+
+    Only symbols actually present in SAMPLE have demo data. Unknown tickers
+    get data: null so the frontend shows its "No data found" error instead of
+    silently rendering the wrong company's numbers.
+    """
     sym = (symbol or "AAPL").upper()
-    record = SAMPLE.get(sym) or SAMPLE.get("AAPL")
+    record = SAMPLE.get(sym)
     body = {"source": "demo", "symbol": sym, "endpoint": endpoint}
-    if endpoint == "history":
+    if record is None:
+        body["data"] = None
+    elif endpoint == "history":
         body["data"] = {"symbol": sym, "historical": record["history"]}
     else:
         body["data"] = record.get(endpoint)

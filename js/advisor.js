@@ -197,8 +197,10 @@
   }
 
   // ---------- results rendering ----------
-  function statChip(label, value) {
-    return '<span class="adv-stat"><span class="adv-stat__label">' +
+  function statChip(label, value, title) {
+    return '<span class="adv-stat"' +
+      (title ? ' title="' + F.escapeHtml(title) + '"' : "") +
+      '><span class="adv-stat__label">' +
       F.escapeHtml(label) + '</span> ' + value + "</span>";
   }
 
@@ -219,8 +221,10 @@
       '</div>' +
       '<div class="adv-card__stats">' +
         statChip("Price", '<span data-cell="price">' + F.formatPrice(it.price) + '</span>') +
-        statChip("P/E", '<span data-cell="pe">' + pe + '</span>') +
-        statChip("Yield", '<span data-cell="dy">' + dy + '</span>') +
+        statChip("P/E ≈", '<span data-cell="pe">' + pe + '</span>',
+          "Approximate — bundled static fundamentals, not live.") +
+        statChip("Yield ≈", '<span data-cell="dy">' + dy + '</span>',
+          "Approximate — bundled static fundamentals, not live.") +
       '</div>' +
       '<div class="adv-card__why"><span class="adv-card__why-label">Why it matches</span>' +
         '<ul>' + why + '</ul></div>' +

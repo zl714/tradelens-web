@@ -6,6 +6,28 @@
   <title>TradeLens — Live Stock Data &amp; News</title>
   <meta name="description"
     content="TradeLens: a clean, honest dashboard for real stock quotes, charts, and news. Built by Zachary LeCroy." />
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Open Graph / Twitter Card -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="TradeLens" />
+  <meta property="og:title" content="TradeLens — Live Stock Data &amp; News" />
+  <meta property="og:description"
+    content="A clean, honest dashboard for real stock quotes, charts, and news. Built by Zachary LeCroy." />
+  <meta property="og:url" content="https://tradelens-journal.vercel.app/" />
+  <meta property="og:image" content="https://tradelens-journal.vercel.app/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="TradeLens — Live Stock Data &amp; News" />
+  <meta name="twitter:description"
+    content="A clean, honest dashboard for real stock quotes, charts, and news. Built by Zachary LeCroy." />
+  <meta name="twitter:image" content="https://tradelens-journal.vercel.app/og.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -121,13 +143,15 @@
                   <button class="btn btn--secondary btn--icon btn--sm" type="submit"
                     aria-label="Add to watchlist"><i data-lucide="plus"></i></button>
                 </form>
+                <p id="watchMsg" class="watchlist__msg" role="status" hidden></p>
                 <ul id="watchlist" class="watchlist__items"></ul>
               </section>
 
               <section class="card markets">
                 <div class="card__header">
                   <h3 class="card__title">Markets</h3>
-                  <span class="card__eyebrow">Indices</span>
+                  <span class="chip chip--sample"
+                    title="Bundled illustrative values — not live index prices.">Sample</span>
                 </div>
                 <ul id="marketsList" class="mkt-list"></ul>
               </section>
@@ -135,7 +159,8 @@
               <section class="card movers">
                 <div class="card__header">
                   <h3 class="card__title">Movers</h3>
-                  <span class="card__eyebrow">Today</span>
+                  <span class="chip chip--sample"
+                    title="Bundled illustrative values — not live prices.">Sample</span>
                 </div>
                 <ul id="moversList" class="mover-list"></ul>
               </section>
@@ -144,7 +169,12 @@
 
           <!-- News — full width below the two-column layout -->
           <article class="card news-card">
-            <h3 class="card__title">Latest News</h3>
+            <div class="card__header">
+              <h3 class="card__title">Latest News</h3>
+              <span id="newsChip" class="chip chip--sample"
+                title="Illustrative demo headlines — news is not included on the live data tier."
+                hidden>Sample headlines</span>
+            </div>
             <ul id="newsList" class="news"></ul>
           </article>
         </main>
@@ -267,9 +297,9 @@
     </button>
   </nav>
 
-  <!-- Chart.js + Lucide icons from CDN (no build step) -->
+  <!-- Chart.js + Lucide icons from CDN (no build step; both pinned, same CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
 
   <!-- App scripts (small, focused modules; load order matters) -->
   <script src="js/sample-data.js"></script>

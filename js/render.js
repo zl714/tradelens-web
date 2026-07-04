@@ -110,8 +110,9 @@
       value + "</span></div>";
   }
 
-  function renderStats(quote) {
+  function renderStats(quote, profile) {
     var q = Array.isArray(quote) ? quote[0] : quote;
+    var p = Array.isArray(profile) ? profile[0] : profile;
     var grid = document.getElementById("statsGrid");
     var host = document.getElementById("range52Host");
     if (!q) { grid.innerHTML = ""; if (host) host.innerHTML = ""; return; }
@@ -119,16 +120,23 @@
     var dayRange = (q.dayLow != null && q.dayHigh != null)
       ? F.formatPrice(q.dayLow) + " – " + F.formatPrice(q.dayHigh) : "—";
 
-    grid.innerHTML = [
-      statCell("Market Cap", F.formatCompact(q.marketCap)),
-      statCell("P/E Ratio", q.pe != null ? Number(q.pe).toFixed(2) : "—"),
-      statCell("Volume", F.formatCompact(q.volume)),
-      statCell("EPS", q.eps != null ? F.formatPrice(q.eps) : "—"),
+    // Live quotes omit avgVolume; the profile endpoint carries averageVolume.
+    // Never fall back to today's volume — that's a wrong number, not a gap.
+    var avgVol = q.avgVolume != null ? q.avgVolume
+      : (p && p.averageVolume != null ? p.averageVolume : null);
+
+    var cells = [statCell("Market Cap", F.formatCompact(q.marketCap))];
+    // The live tier has no P/E / EPS — hide those cells rather than show "—".
+    if (q.pe != null) cells.push(statCell("P/E Ratio", Number(q.pe).toFixed(2)));
+    cells.push(statCell("Volume", F.formatCompact(q.volume)));
+    if (q.eps != null) cells.push(statCell("EPS", F.formatPrice(q.eps)));
+    cells.push(
       statCell("Open", F.formatPrice(q.open)),
       statCell("Prev Close", F.formatPrice(q.previousClose)),
       statCell("Day Range", dayRange),
-      statCell("Avg Vol", F.formatCompact(q.avgVolume != null ? q.avgVolume : q.volume))
-    ].join("");
+      statCell("Avg Vol", F.formatCompact(avgVol))
+    );
+    grid.innerHTML = cells.join("");
 
     renderRange52(host, q);
   }
@@ -156,8 +164,10 @@
       '</div>';
   }
 
-  function renderNews(news) {
+  function renderNews(news, source) {
     var list = document.getElementById("newsList");
+    var chip = document.getElementById("newsChip");
+    if (chip) chip.hidden = source !== "demo";
     var items = Array.isArray(news) ? news : [];
     if (!items.length) {
       list.innerHTML = '<li class="news__item"><span class="news__title">' +

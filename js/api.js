@@ -14,7 +14,10 @@
   function clientSample(endpoint, symbol) {
     var sample = window.MARKETLENS_SAMPLE || {};
     var sym = (symbol || "AAPL").toUpperCase();
-    var record = sample[sym] || sample.AAPL;
+    // Only symbols actually bundled in the sample have demo data. Unknown
+    // tickers return null so the UI shows its "No data found" error instead
+    // of silently rendering the wrong company.
+    var record = sample[sym];
     if (!record) return { source: "demo", data: null };
     var data;
     if (endpoint === "history") {
@@ -67,9 +70,10 @@
       fetchEndpoint("chart1h", symbol),
       fetchEndpoint("chart4h", symbol)
     ]).then(function (results) {
-      // Badge reflects the CORE data only; an unavailable intraday tier should
-      // not flip an otherwise-live dashboard into "Demo data".
-      var core = results.slice(0, 4);
+      // Badge reflects quote/profile/history ONLY. News is demo-tier on the
+      // free key, and an unavailable intraday tier should not flip an
+      // otherwise-live dashboard into "Demo data" either.
+      var core = results.slice(0, 3);
       var anyDemo = core.some(function (r) { return r.source === "demo"; });
       return {
         source: anyDemo ? "demo" : "live",
@@ -77,6 +81,7 @@
         profile: results[1].data,
         history: results[2].data,
         news: results[3].data,
+        newsSource: results[3].source,
         charts: {
           d1: results[4].data,
           h1: results[5].data,

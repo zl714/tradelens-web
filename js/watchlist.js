@@ -28,15 +28,42 @@
 
   function getList() { return load(); }
 
+  function showMsg(text) {
+    var el = document.getElementById("watchMsg");
+    if (!el) return;
+    el.textContent = text || "";
+    el.hidden = !text;
+    if (text) {
+      clearTimeout(showMsg._t);
+      showMsg._t = setTimeout(function () { el.hidden = true; }, 5000);
+    }
+  }
+
   function add(symbol) {
     var sym = String(symbol || "").trim().toUpperCase();
-    if (!sym || !/^[A-Z.\-]{1,8}$/.test(sym)) return false;
-    var list = load();
-    if (list.indexOf(sym) === -1) {
-      list.push(sym);
-      save(list);
-      renderList(sym);
+    if (!sym || !/^[A-Z.\-]{1,8}$/.test(sym)) {
+      showMsg("Enter a stock symbol — letters only (e.g. AAPL).");
+      return false;
     }
+    if (load().indexOf(sym) !== -1) { showMsg(""); return true; }
+
+    // Validate the ticker actually has data before inserting a row, so an
+    // unknown symbol never renders another company's numbers.
+    showMsg("Checking " + sym + "…");
+    window.MLApi.fetchEndpoint("quote", sym).then(function (res) {
+      var q = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (!q) {
+        showMsg('No data found for "' + sym + '".');
+        return;
+      }
+      showMsg("");
+      var list = load();
+      if (list.indexOf(sym) === -1) {
+        list.push(sym);
+        save(list);
+        renderList(sym);
+      }
+    });
     return true;
   }
 
