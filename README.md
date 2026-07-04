@@ -1,6 +1,10 @@
 # TradeLens
 
-**A clean, honest dashboard for real stock quotes, charts, and news.**
+**A clean, honest dashboard for real stock quotes, charts, and news — plus a trade journal and playbook.**
+
+**Live app:** [tradelens-journal.vercel.app](https://tradelens-journal.vercel.app)
+
+![TradeLens dashboard](docs/screenshot-dashboard.png)
 
 TradeLens surfaces live market data and headlines for any ticker — no
 predictions, no hype, just the facts presented cleanly. It is the working,
@@ -30,6 +34,15 @@ the part that always works: real data, displayed well.
   with a plain-English "Why it matches" for each pick. Educational only — the
   not-financial-advice notice is scoped to this view.
 - **Latest news** — headlines with source, date, and links that open in a new tab.
+- **Trade Journal** — a no-AI, no-grading trade log: record ticker, direction,
+  entry/exit/stop/target, size, dates, setup tag, and notes; P&L $, R-multiple,
+  and Win/Loss/Open outcome are auto-computed from the raw inputs and everything
+  persists in `localStorage`.
+- **Rules / Playbook** — write down your trading rules (Entry / Exit / Risk /
+  Mindset / General), add/edit/delete/reorder them, plus a free-form auto-saving
+  Notes area.
+- **Markets & Movers rail** — major indices overview and a movers list rendered
+  from the bundled sample so the right rail is always filled.
 - **Watchlist** — add/remove tickers, persisted in `localStorage`; click to load.
 - **Loading & error states**, plus a **"Demo data"** badge when running on sample data.
 
@@ -64,9 +77,9 @@ Browser  ──►  /api/data?endpoint=quote&symbol=AAPL  ──►  FMP API
 ## Project structure
 
 ```
-marketlens/
+tradelens-web/
 ├── index.html            # markup + script/style includes
-├── css/styles.css        # theme (dark forest green + lime accent)
+├── css/styles.css        # theme (navy near-black + amber accent)
 ├── js/
 │   ├── sample-data.js      # client-side fallback dataset (daily + intraday)
 │   ├── format.js           # number / date formatting helpers
@@ -74,12 +87,18 @@ marketlens/
 │   ├── charts.js           # Chart.js price chart + multi-timeframe toggles
 │   ├── render.js           # quote / stats / news DOM rendering
 │   ├── watchlist.js        # localStorage watchlist
+│   ├── markets.js          # Markets overview + Movers rail
+│   ├── journal.js          # Trade Journal view (localStorage)
+│   ├── rules.js            # Rules / Playbook view (localStorage)
 │   ├── advisor-universe.js # bundled ~45-ticker universe + tags
 │   ├── advisor.js          # onboarding quiz, rule-based ranking, results
 │   └── app.js              # orchestration + view switching + event wiring
 ├── api/
 │   ├── data.py           # Vercel Python serverless proxy (stdlib only)
 │   └── sample.py         # bundled server-side sample dataset
+├── docs/
+│   └── screenshot-dashboard.png
+├── DESIGN_SYSTEM.md      # LeCroy Design System notes
 ├── .env.example          # FMP_API_KEY placeholder (copy to .env)
 ├── .gitignore            # ignores .env, __pycache__, .vercel, etc.
 └── vercel.json           # zero-config deploy hints
@@ -98,7 +117,7 @@ client-side sample data and shows the "Demo data" badge. Great for a fast look.
 
 ```bash
 npm i -g vercel        # one-time
-cd marketlens
+cd tradelens-web
 vercel dev             # serves the static site + the Python function locally
 ```
 
@@ -138,5 +157,5 @@ If you skip the env var, the live site still works — it just shows demo data.
 
 ---
 
-Built by [Zachary LeCroy](../my-portfolio/index.html). Data via Financial
+Built by [Zachary LeCroy](https://zacharylecroy.vercel.app). Data via Financial
 Modeling Prep. Educational / portfolio project.
