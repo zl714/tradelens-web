@@ -210,11 +210,22 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
+    CACHE_TTL = {  # Vercel edge cache (s-maxage) per endpoint, seconds.
+        "quote": 60, "chart1d": 300, "chart1h": 600, "chart4h": 900,
+        "history": 3600, "profile": 86400, "news": 900,
+    }
+
     def _send_json(self, status, body):
         payload = json.dumps(body).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Cache-Control", "no-store")
+        # Edge-cache live responses so repeat visitors don't burn the FMP
+        # free-tier daily quota; demo/error responses stay uncached.
+        ttl = self.CACHE_TTL.get(body.get("endpoint", ""), 0) if isinstance(body, dict) else 0
+        if status == 200 and ttl and isinstance(body, dict) and body.get("source") == "live":
+            self.send_header("Cache-Control", f"public, s-maxage={ttl}, stale-while-revalidate={ttl * 5}")
+        else:
+            self.send_header("Cache-Control", "no-store")
         self._cors_headers()
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
