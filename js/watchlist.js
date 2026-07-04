@@ -28,15 +28,50 @@
 
   function getList() { return load(); }
 
+  // Inline feedback under the add form so rejected input never looks like a
+  // broken button. Created lazily to keep the markup in one place.
+  function setMsg(text) {
+    var form = document.getElementById("watchForm");
+    if (!form) return;
+    var el = document.getElementById("watchMsg");
+    if (!el) {
+      el = document.createElement("p");
+      el.id = "watchMsg";
+      el.className = "watchlist__msg";
+      form.insertAdjacentElement("afterend", el);
+    }
+    el.textContent = text || "";
+    el.hidden = !text;
+  }
+
   function add(symbol) {
     var sym = String(symbol || "").trim().toUpperCase();
-    if (!sym || !/^[A-Z.\-]{1,8}$/.test(sym)) return false;
-    var list = load();
-    if (list.indexOf(sym) === -1) {
-      list.push(sym);
-      save(list);
-      renderList(sym);
+    if (!sym || !/^[A-Z.\-]{1,8}$/.test(sym)) {
+      setMsg("Enter a stock symbol — letters only (e.g. AAPL).");
+      return false;
     }
+    var list = load();
+    if (list.indexOf(sym) !== -1) {
+      setMsg("");
+      return true;
+    }
+    // Verify the ticker actually resolves to data before inserting a row, so
+    // an unknown symbol never renders another company's numbers.
+    setMsg("Checking " + sym + "…");
+    window.MLApi.fetchEndpoint("quote", sym).then(function (res) {
+      var q = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (!q || q.price == null) {
+        setMsg('No data found for "' + sym + '" — check the ticker.');
+        return;
+      }
+      var l = load();
+      if (l.indexOf(sym) === -1) {
+        l.push(sym);
+        save(l);
+        renderList(sym);
+      }
+      setMsg("");
+    });
     return true;
   }
 

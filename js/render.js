@@ -110,8 +110,10 @@
       value + "</span></div>";
   }
 
-  function renderStats(quote) {
+  function renderStats(quote, profile) {
     var q = Array.isArray(quote) ? quote[0] : quote;
+    var p = Array.isArray(profile) ? profile[0] : profile;
+    p = p || {};
     var grid = document.getElementById("statsGrid");
     var host = document.getElementById("range52Host");
     if (!q) { grid.innerHTML = ""; if (host) host.innerHTML = ""; return; }
@@ -119,15 +121,26 @@
     var dayRange = (q.dayLow != null && q.dayHigh != null)
       ? F.formatPrice(q.dayLow) + " – " + F.formatPrice(q.dayHigh) : "—";
 
+    // Live quotes carry no pe/eps/avgVolume; take what the profile endpoint
+    // has (averageVolume, beta, lastDividend) and swap in Beta / Div per Share
+    // when P/E and EPS are unavailable rather than showing dead "—" cells.
+    var avgVol = q.avgVolume != null ? q.avgVolume : p.averageVolume;
+    var peCell = q.pe != null
+      ? statCell("P/E Ratio", Number(q.pe).toFixed(2))
+      : statCell("Beta", p.beta != null ? Number(p.beta).toFixed(2) : "—");
+    var epsCell = q.eps != null
+      ? statCell("EPS", F.formatPrice(q.eps))
+      : statCell("Div / Share", p.lastDividend != null ? F.formatPrice(p.lastDividend) : "—");
+
     grid.innerHTML = [
       statCell("Market Cap", F.formatCompact(q.marketCap)),
-      statCell("P/E Ratio", q.pe != null ? Number(q.pe).toFixed(2) : "—"),
+      peCell,
       statCell("Volume", F.formatCompact(q.volume)),
-      statCell("EPS", q.eps != null ? F.formatPrice(q.eps) : "—"),
+      epsCell,
       statCell("Open", F.formatPrice(q.open)),
       statCell("Prev Close", F.formatPrice(q.previousClose)),
       statCell("Day Range", dayRange),
-      statCell("Avg Vol", F.formatCompact(q.avgVolume != null ? q.avgVolume : q.volume))
+      statCell("Avg Vol", avgVol != null ? F.formatCompact(avgVol) : "—")
     ].join("");
 
     renderRange52(host, q);

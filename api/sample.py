@@ -242,7 +242,9 @@ def _build_news(sym, t):
             "title": title_tpl.format(name=t["name"], sym=sym),
             "publishedDate": f"{d.isoformat()} 13:30:00",
             "site": source,
-            "url": t["website"],
+            # Demo headlines are not real articles — "#" makes the frontend
+            # render them as plain text instead of a misleading homepage link.
+            "url": "#",
             "text": (
                 f"Illustrative demo summary for {t['name']} ({sym}). "
                 "Connect a free FMP API key to see live headlines."

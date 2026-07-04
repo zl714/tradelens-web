@@ -41,15 +41,19 @@
     }).join("");
   }
 
-  function renderMovers() {
-    var list = document.getElementById("moversList");
-    if (!list) return;
+  function moverRowsFromSample() {
     var sample = window.MARKETLENS_SAMPLE || {};
-    var rows = Object.keys(sample).map(function (sym) {
+    return Object.keys(sample).map(function (sym) {
       var q = (sample[sym].quote && sample[sym].quote[0]) || {};
       return { sym: sym, name: q.name || "", price: q.price,
         chgPct: Number(q.changesPercentage) };
-    }).sort(function (a, b) {
+    });
+  }
+
+  function renderMovers(rows) {
+    var list = document.getElementById("moversList");
+    if (!list) return;
+    rows = (rows || moverRowsFromSample()).slice().sort(function (a, b) {
       return Math.abs(b.chgPct) - Math.abs(a.chgPct);
     });
 
@@ -72,9 +76,28 @@
     }).join("");
   }
 
+  // Upgrade Movers to LIVE quotes through the /api/data proxy so its prices
+  // always agree with the quote header and watchlist. Falls back to the row's
+  // bundled sample values for any symbol whose live fetch fails.
+  function refreshMoversLive() {
+    if (!window.MLApi) return;
+    var rows = moverRowsFromSample();
+    Promise.all(rows.map(function (r) {
+      return window.MLApi.fetchEndpoint("quote", r.sym).then(function (res) {
+        var q = (res.source === "live" && Array.isArray(res.data) && res.data[0]) || null;
+        if (!q) return r;
+        return { sym: r.sym, name: q.name || r.name, price: q.price,
+          chgPct: Number(q.changesPercentage) };
+      });
+    })).then(function (liveRows) {
+      renderMovers(liveRows);
+    });
+  }
+
   function init() {
     renderMarkets();
     renderMovers();
+    refreshMoversLive();
     var movers = document.getElementById("moversList");
     if (movers) {
       movers.addEventListener("click", function (e) {

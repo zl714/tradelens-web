@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0B1120"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#334155" stroke-width="2"/>
+  <!-- candlesticks -->
+  <line x1="18" y1="16" x2="18" y2="48" stroke="#F59E0B" stroke-width="2"/>
+  <rect x="13" y="26" width="10" height="14" rx="2" fill="#F59E0B"/>
+  <line x1="32" y1="12" x2="32" y2="44" stroke="#34D399" stroke-width="2"/>
+  <rect x="27" y="18" width="10" height="16" rx="2" fill="#34D399"/>
+  <line x1="46" y1="20" x2="46" y2="52" stroke="#F87171" stroke-width="2"/>
+  <rect x="41" y="28" width="10" height="16" rx="2" fill="#F87171"/>
+</svg>

@@ -314,6 +314,11 @@ a:hover { color: var(--accent-400); }
   background: var(--warn);
 }
 .badge--hidden { display: none; }
+.badge--live {
+  background: var(--up-soft);
+  color: var(--up);
+}
+.badge--live::before { background: var(--up); }
 
 /* ---------- Status / states ---------- */
 .status {
@@ -615,6 +620,12 @@ a.news__title:hover { color: var(--accent-400); }
   outline: none;
 }
 .watchlist__input:focus { border-color: var(--accent-500); box-shadow: var(--focus-ring); }
+.watchlist__msg {
+  margin-bottom: var(--sp-2);
+  color: var(--text-muted);
+  font-size: var(--fs-label);
+}
+.watchlist__msg[hidden] { display: none; }
 .watchlist__items { list-style: none; display: flex; flex-direction: column; }
 
 .wl-row {

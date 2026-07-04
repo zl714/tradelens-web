@@ -39,7 +39,11 @@
 
   function formatDate(raw) {
     if (!raw) return "";
-    var d = new Date(String(raw).replace(" ", "T"));
+    var s = String(raw).replace(" ", "T");
+    // Date-only strings ("2026-07-01") parse as UTC midnight and render a day
+    // early in US timezones — anchor them to local midnight instead.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s += "T00:00:00";
+    var d = new Date(s);
     if (isNaN(d.getTime())) return String(raw).slice(0, 10);
     return d.toLocaleDateString("en-US", {
       month: "short", day: "numeric", year: "numeric"

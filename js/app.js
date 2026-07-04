@@ -22,15 +22,36 @@
 
   function setBadge(isDemo) {
     var badge = document.getElementById("dataBadge");
-    badge.classList.toggle("badge--hidden", !isDemo);
+    badge.classList.remove("badge--hidden");
+    badge.classList.toggle("badge--live", !isDemo);
+    badge.textContent = isDemo ? "Demo data" : "Live data";
     badge.title = isDemo
       ? "Showing bundled sample data (no live API key configured or upstream unavailable)."
-      : "";
+      : "Quotes, history, and charts are live from Financial Modeling Prep.";
   }
 
-  function loadSymbol(symbol) {
+  // Label the news card honestly: headlines fall back to bundled sample copy
+  // when the news endpoint is tier-restricted, even while quotes are live.
+  function setNewsLabel(newsIsDemo) {
+    var chip = document.getElementById("newsBadge");
+    if (chip) chip.hidden = !newsIsDemo;
+  }
+
+  // Bring the quote card into view when it is off-screen — on mobile the rail
+  // panels sit above it, so a search otherwise appears to do nothing.
+  function revealQuoteCard() {
+    var card = document.getElementById("quoteCard");
+    if (!card) return;
+    var rect = card.getBoundingClientRect();
+    if (rect.top < 0 || rect.top > window.innerHeight - 120) {
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function loadSymbol(symbol, opts) {
     var sym = String(symbol || "").trim().toUpperCase();
     if (!sym) return;
+    var reveal = !!(opts && opts.reveal);
     currentSymbol = sym;
     setStatus("Loading " + sym + "…", "loading");
     window.MLWatchlist.setActive(sym);
@@ -42,11 +63,13 @@
         return;
       }
       window.MLRender.renderQuote(bundle.quote, bundle.profile, bundle.history);
-      window.MLRender.renderStats(bundle.quote);
+      window.MLRender.renderStats(bundle.quote, bundle.profile);
       window.MLRender.renderNews(bundle.news);
       window.MLChart.setData(bundle);
       setBadge(bundle.source === "demo");
+      setNewsLabel(bundle.newsSource === "demo");
       setStatus("");
+      if (reveal) revealQuoteCard();
     }).catch(function () {
       setStatus("Something went wrong loading data. Showing demo data.", "error");
       setBadge(true);
@@ -58,7 +81,7 @@
       e.preventDefault();
       var input = document.getElementById("searchInput");
       var val = input.value.trim().toUpperCase();
-      if (val) { loadSymbol(val); input.value = ""; }
+      if (val) { loadSymbol(val, { reveal: true }); input.value = ""; }
     });
   }
 
@@ -77,9 +100,16 @@
 
   // View switcher driven by [data-view] + hash routing (#/journal, #/rules, …).
   var VIEWS = ["dashboard", "advisor", "journal", "rules"];
+  var VIEW_TITLES = {
+    dashboard: "TradeLens — Live Stock Data & News",
+    advisor: "Find Stocks — TradeLens",
+    journal: "Journal — TradeLens",
+    rules: "Playbook — TradeLens"
+  };
 
   function showView(view) {
     if (VIEWS.indexOf(view) === -1) view = "dashboard";
+    document.title = VIEW_TITLES[view];
     VIEWS.forEach(function (v) {
       var el = document.getElementById("view-" + v);
       if (el) el.classList.toggle("view--hidden", v !== view);
@@ -146,7 +176,7 @@
     initRangeToggle();
     initViewNav();
     initTabAdd();
-    window.MLWatchlist.init(loadSymbol);
+    window.MLWatchlist.init(function (sym) { loadSymbol(sym, { reveal: true }); });
     if (window.MLAdvisor) window.MLAdvisor.init(loadSymbolInDashboard);
     if (window.MLJournal) window.MLJournal.init();
     if (window.MLRules) window.MLRules.init();

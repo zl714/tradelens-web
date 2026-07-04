@@ -197,10 +197,16 @@
   }
 
   // ---------- results rendering ----------
-  function statChip(label, value) {
-    return '<span class="adv-stat"><span class="adv-stat__label">' +
+  function statChip(label, value, note) {
+    return '<span class="adv-stat"' +
+      (note ? ' title="' + F.escapeHtml(note) + '"' : "") +
+      '><span class="adv-stat__label">' +
       F.escapeHtml(label) + '</span> ' + value + "</span>";
   }
+
+  // P/E and Yield come from the bundled reference universe (static), so they
+  // are labeled as approximate to avoid contradicting live dashboard numbers.
+  var STATIC_NOTE = "Approximate — static reference value, may lag the live market.";
 
   function cardHtml(rec) {
     var it = rec.item;
@@ -219,8 +225,8 @@
       '</div>' +
       '<div class="adv-card__stats">' +
         statChip("Price", '<span data-cell="price">' + F.formatPrice(it.price) + '</span>') +
-        statChip("P/E", '<span data-cell="pe">' + pe + '</span>') +
-        statChip("Yield", '<span data-cell="dy">' + dy + '</span>') +
+        statChip("P/E", '≈ <span data-cell="pe">' + pe + '</span>', STATIC_NOTE) +
+        statChip("Yield", '≈ <span data-cell="dy">' + dy + '</span>', STATIC_NOTE) +
       '</div>' +
       '<div class="adv-card__why"><span class="adv-card__why-label">Why it matches</span>' +
         '<ul>' + why + '</ul></div>' +
