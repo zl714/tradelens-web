@@ -1400,3 +1400,6 @@ a.news__title:hover { color: var(--accent-400); }
   .adv-grid { grid-template-columns: 1fr; }
   .jr-form__grid { grid-template-columns: 1fr; }
 }
+
+/* The hidden attribute must win over .chip display:inline-flex. */
+.chip[hidden] { display: none; }

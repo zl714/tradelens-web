@@ -1,8 +1,8 @@
 /* Markets overview + Movers panels for the dashboard right rail.
  *
- * Both render from the bundled client sample so the rail is always filled even
- * with no API key. Markets shows the major indices; Movers ranks the demo
- * universe by absolute % change and lets you load one into the dashboard.
+ * Markets shows the major indices from the bundled client sample. Movers ranks
+ * the demo universe by absolute % change using live quotes when the backend
+ * has them, and the bundled sample otherwise, so the rail is always filled.
  */
 (function () {
   "use strict";
@@ -41,20 +41,27 @@
     }).join("");
   }
 
-  function renderMovers() {
-    var list = document.getElementById("moversList");
-    if (!list) return;
+  // Sample rows for the bundled demo universe (always available offline).
+  function sampleMoverRows() {
     var sample = window.MARKETLENS_SAMPLE || {};
-    var rows = Object.keys(sample).map(function (sym) {
+    return Object.keys(sample).map(function (sym) {
       var q = (sample[sym].quote && sample[sym].quote[0]) || {};
       return { sym: sym, name: q.name || "", price: q.price,
         chgPct: Number(q.changesPercentage) };
-    }).sort(function (a, b) {
+    });
+  }
+
+  function paintMovers(rows, isLive) {
+    var list = document.getElementById("moversList");
+    if (!list) return;
+    var chip = document.getElementById("moversChip");
+    if (chip) chip.hidden = !!isLive;
+
+    rows = rows.slice().sort(function (a, b) {
       return Math.abs(b.chgPct) - Math.abs(a.chgPct);
     });
 
     list.innerHTML = rows.map(function (r) {
-      var up = r.chgPct >= 0;
       return '<li><button class="mover-row" type="button" data-sym="' +
         F.escapeHtml(r.sym) + '">' +
         '<span class="mover-id">' +
@@ -70,6 +77,31 @@
         "</span>" +
         "</button></li>";
     }).join("");
+  }
+
+  // Paint the bundled sample immediately, then swap in live quotes so Movers
+  // never disagrees with the live quote card and watchlist. All-or-nothing:
+  // if any symbol comes back as demo data, the whole panel stays on the
+  // sample (and keeps its "Sample" chip) rather than mixing the two.
+  function renderMovers() {
+    var rows = sampleMoverRows();
+    paintMovers(rows, false);
+    if (!window.MLApi || !rows.length) return;
+
+    Promise.all(rows.map(function (r) {
+      return window.MLApi.fetchEndpoint("quote", r.sym);
+    })).then(function (results) {
+      var live = [];
+      for (var i = 0; i < results.length; i++) {
+        var res = results[i];
+        var q = Array.isArray(res.data) ? res.data[0] : res.data;
+        var pct = q ? Number(q.changesPercentage) : NaN;
+        if (res.source !== "live" || !q || q.price == null || isNaN(pct)) return;
+        live.push({ sym: rows[i].sym, name: q.name || rows[i].name,
+          price: q.price, chgPct: pct });
+      }
+      paintMovers(live, true);
+    }).catch(function () { /* keep the sample rows */ });
   }
 
   function init() {
